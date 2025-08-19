@@ -4,11 +4,9 @@ require_once '../models/Order.php';
 
 class AuthController
 {
-    // 1. Primero, declaramos las propiedades que la clase usará.
     private $userModel;
     private $orderModel;
 
-    // 2. Luego, DENTRO del constructor, les asignamos sus valores.
     public function __construct($db_connection)
     {
         $this->userModel = new User($db_connection);
@@ -29,9 +27,16 @@ class AuthController
             exit();
         }
 
-        $pedidosEnCurso = $this->orderModel->findByStatuses(['En Curso', 'Confirmado']);
-        $pedidosListos = $this->orderModel->findByStatuses(['Listo para Retirar']);
+        // 1. Obtenemos todos los pedidos del día de hoy
+        $todaysOrders = $this->orderModel->findTodaysOrders();
 
+        // 2. Los organizamos en listas separadas por su estado
+        $pedidosPorEstado = [];
+        foreach ($todaysOrders as $pedido) {
+            $pedidosPorEstado[$pedido['estado']][] = $pedido;
+        }
+
+        // 3. Pasamos la lista organizada a la vista
         require_once '../views/layouts/header.php';
         require_once '../views/pages/dashboard/index.php';
         require_once '../views/layouts/footer.php';
@@ -47,19 +52,21 @@ class AuthController
 
     public function handleLogin()
     {
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-        $user = $this->userModel->findByEmail($email);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $_POST['email'];
+            $password = $_POST['password'];
+            $user = $this->userModel->findByEmail($email);
 
-        if ($user && password_verify($password, $user['password_hash'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['nombre'];
-            $_SESSION['user_role'] = $user['rol'];
-            header('Location: /sistemagestion/dashboard');
-            exit();
-        } else {
-            echo "<h1>Error</h1><p>Credenciales incorrectas. Inténtalo de nuevo.</p>";
-            echo '<a href="/sistemagestion/login">Volver</a>';
+            if ($user && password_verify($password, $user['password_hash'])) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $user['nombre'];
+                $_SESSION['user_role'] = $user['rol'];
+                header('Location: /sistemagestion/dashboard');
+                exit();
+            } else {
+                echo "<h1>Error</h1><p>Credenciales incorrectas. Inténtalo de nuevo.</p>";
+                echo '<a href="/sistemagestion/login">Volver</a>';
+            }
         }
     }
 }

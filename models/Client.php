@@ -10,7 +10,6 @@ class Client
         $this->connection = $db_connection;
     }
 
-<<<<<<< HEAD
     /**
      * Busca todos los clientes aplicando los filtros proporcionados.
      */
@@ -58,13 +57,10 @@ class Client
         return $result['total'] ?? 0;
     }
 
-=======
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function findAll()
     {
         $query = "SELECT id, nombre, telefono, email, notas FROM " . $this->table_name . " ORDER BY nombre ASC";
         $result = $this->connection->query($query);
-<<<<<<< HEAD
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
     
@@ -76,9 +72,6 @@ class Client
         $stmt->execute();
         $result = $stmt->get_result();
         return $result ? $result->fetch_assoc() : null;
-=======
-        return $result->fetch_all(MYSQLI_ASSOC);
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     }
 
     public function create($nombre, $telefono, $email, $notas)
@@ -93,19 +86,6 @@ class Client
         return $stmt->execute();
     }
 
-<<<<<<< HEAD
-=======
-    public function findById($id)
-    {
-        $query = "SELECT id, nombre, telefono, email, notas FROM " . $this->table_name . " WHERE id = ? LIMIT 1";
-        $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->fetch_assoc();
-    }
-
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function update($id, $nombre, $telefono, $email, $notas)
     {
         $query = "UPDATE " . $this->table_name . " SET nombre = ?, telefono = ?, email = ?, notas = ? WHERE id = ?";
@@ -118,7 +98,6 @@ class Client
         return $stmt->execute();
     }
 
-<<<<<<< HEAD
     public function delete($id) {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->connection->prepare($query);
@@ -131,8 +110,6 @@ class Client
         return true;
     }
 
-=======
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function searchByTerm($term)
     {
         $likeTerm = "%" . $term . "%";
@@ -143,16 +120,4 @@ class Client
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
-<<<<<<< HEAD
-=======
-    /**
- * ¡NUEVO! Elimina un cliente de la base de datos por su ID.
- */
-public function delete($id) {
-    $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
-    $stmt = $this->connection->prepare($query);
-    $stmt->bind_param("i", $id);
-    return $stmt->execute();
-}
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
 }

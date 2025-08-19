@@ -22,12 +22,8 @@ class Product
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("i", $id);
         $stmt->execute();
-<<<<<<< HEAD
         $result = $stmt->get_result();
         return $result->fetch_assoc();
-=======
-        return $stmt->get_result()->fetch_assoc();
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     }
 
     public function update($id, $descripcion, $precio, $disponible)
@@ -75,23 +71,14 @@ class Product
             $stmt->bind_param($types, ...$params);
         }
         $stmt->execute();
-<<<<<<< HEAD
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-=======
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function delete($id) {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317

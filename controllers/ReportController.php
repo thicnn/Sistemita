@@ -12,7 +12,6 @@ class ReportController {
     }
 
     public function index() {
-<<<<<<< HEAD
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { 
             header('Location: /sistemagestion/dashboard'); 
             exit(); 
@@ -37,31 +36,11 @@ class ReportController {
         // Calcula la producción del mes actual
         $primerDiaMes = date('Y-m-01');
         $hoy = date('Y-m-d');
-=======
-        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
-
-        $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $fechaFin = $_GET['fecha_fin'] ?? date('Y-m-d');
-        
-        // --- TODAS LAS LLAMADAS CORREGIDAS CON '->' ---
-        $salesData = $this->orderModel->getSalesReport($fechaInicio, $fechaFin);
-        $statusCounts = $this->reportModel->countOrdersByStatus();
-        $monthlyComparison = $this->orderModel->getMonthlySalesComparison();
-        $providerPayments = $this->reportModel->getProviderPayments();
-        $latestCounters = $this->reportModel->getLatestCounters();
-
-        $primerDiaMes = date('Y-m-01');
-        $hoy = date('Y-m-d');
-
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         $c454e_bn_prod = $this->reportModel->getProductionCountForPeriod(2, 'Impresion', 'blanco y negro', $primerDiaMes, $hoy) + $this->reportModel->getProductionCountForPeriod(2, 'Fotocopia', 'blanco y negro', $primerDiaMes, $hoy);
         $c454e_color_prod = $this->reportModel->getProductionCountForPeriod(2, 'Impresion', 'color', $primerDiaMes, $hoy) + $this->reportModel->getProductionCountForPeriod(2, 'Fotocopia', 'color', $primerDiaMes, $hoy);
         $bh227_total_prod = $this->reportModel->getProductionCountForPeriod(1, 'Impresion', 'blanco y negro', $primerDiaMes, $hoy) + $this->reportModel->getProductionCountForPeriod(1, 'Fotocopia', 'blanco y negro', $primerDiaMes, $hoy);
         
-<<<<<<< HEAD
         // Carga la vista con todos los datos
-=======
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         require_once '../views/layouts/header.php';
         require_once '../views/pages/reports/index.php';
         require_once '../views/layouts/footer.php';
@@ -76,10 +55,7 @@ class ReportController {
     }
 
     public function storeCounter() {
-<<<<<<< HEAD
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { exit('Acceso denegado'); }
-=======
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->reportModel->saveCounter($_POST['maquina'], $_POST['fecha_inicio'], $_POST['fecha_fin'], $_POST['contador_bn'], $_POST['contador_color'] ?? 0, $_POST['notas'] ?? '');
         }
@@ -87,10 +63,7 @@ class ReportController {
     }
 
     public function storeProviderPayment() {
-<<<<<<< HEAD
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { exit('Acceso denegado'); }
-=======
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->reportModel->saveProviderPayment($_POST['fecha_pago'], $_POST['descripcion'], $_POST['monto']);
         }
@@ -98,21 +71,13 @@ class ReportController {
     }
     
     public function deleteProviderPayment($id) {
-<<<<<<< HEAD
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
-=======
-        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
-            header('Location: /sistemagestion/dashboard');
-            exit();
-        }
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->reportModel->deleteProviderPayment($id);
         }
         header('Location: /sistemagestion/reports');
         exit();
     }
-<<<<<<< HEAD
     
     public function deletePayments() {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { exit(json_encode(['success' => false, 'message' => 'Acceso denegado'])); }
@@ -137,6 +102,4 @@ class ReportController {
         echo json_encode(['success' => false, 'message' => 'Petición inválida']);
         exit();
     }
-=======
->>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
 }
