@@ -6,45 +6,39 @@ class Report {
         $this->connection = $db_connection;
     }
 
-    public function countOrdersByStatus() {
-        $query = "SELECT estado, COUNT(id) as total FROM pedidos GROUP BY estado";
-        $result = $this->connection->query($query);
+    public function countOrdersByStatus($startDate, $endDate) {
+        $endDate = $endDate . ' 23:59:59';
+        $query = "SELECT estado, COUNT(id) as total FROM pedidos WHERE fecha_creacion BETWEEN ? AND ? GROUP BY estado";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+
     public function getProductionCountForPeriod($maquina_id, $tipo, $categoria, $inicio, $fin) {
         $fin_completa = $fin . ' 23:59:59';
-        $query = "SELECT SUM(i.cantidad) as total 
-                  FROM items_pedido i
-                  JOIN pedidos p ON i.pedido_id = p.id
-                  JOIN productos pr ON i.descripcion = pr.descripcion
-                  WHERE pr.maquina_id = ? AND i.tipo = ? AND i.categoria = ? 
-                  AND p.estado IN ('Listo para Retirar', 'Entregado') AND p.fecha_creacion BETWEEN ? AND ?";
+        $query = "SELECT SUM(i.cantidad) as total FROM items_pedido i JOIN pedidos p ON i.pedido_id = p.id JOIN productos pr ON i.descripcion = pr.descripcion WHERE pr.maquina_id = ? AND i.tipo = ? AND i.categoria = ? AND p.estado IN ('Listo para Retirar', 'Entregado') AND p.fecha_creacion BETWEEN ? AND ?";
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("issss", $maquina_id, $tipo, $categoria, $inicio, $fin_completa);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
         return $result['total'] ?? 0;
     }
-    
+
     public function getCounterHistory($filters = []) {
         $query = "SELECT * FROM impresora_contadores";
-        $params = [];
-        $types = '';
         if (!empty($filters['month'])) {
             $query .= " WHERE DATE_FORMAT(fecha_fin, '%Y-%m') = ?";
-            $params[] = $filters['month'];
-            $types .= 's';
         }
         $query .= " ORDER BY fecha_fin DESC";
-        
         $stmt = $this->connection->prepare($query);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
+        if (!empty($filters['month'])) {
+            $stmt->bind_param("s", $filters['month']);
         }
         $stmt->execute();
-        $result = $stmt->get_result();
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
     public function saveCounter($maquina, $fecha_inicio, $fecha_fin, $bn, $color, $notas) {
@@ -57,27 +51,22 @@ class Report {
 
     public function getProviderPayments($filters = []) {
         $query = "SELECT * FROM proveedor_pagos";
-        $where = []; 
-        $params = []; 
-        $types = '';
+        $where = []; $params = []; $types = '';
         if (!empty($filters['month'])) {
             $where[] = "DATE_FORMAT(fecha_pago, '%Y-%m') = ?";
-            $params[] = $filters['month']; 
-            $types .= 's';
+            $params[] = $filters['month']; $types .= 's';
         }
         if (!empty($filters['amount']) && is_numeric($filters['amount'])) {
             $where[] = "monto >= ?";
-            $params[] = $filters['amount']; 
-            $types .= 'd';
+            $params[] = $filters['amount']; $types .= 'd';
         }
         if (!empty($where)) { $query .= " WHERE " . implode(' AND ', $where); }
         $query .= " ORDER BY fecha_pago DESC";
-        
+
         $stmt = $this->connection->prepare($query);
         if (!empty($params)) { $stmt->bind_param($types, ...$params); }
         $stmt->execute();
-        $result = $stmt->get_result();
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
     public function saveProviderPayment($fecha, $descripcion, $monto) {
@@ -87,7 +76,6 @@ class Report {
         return $stmt->execute();
     }
 
-    // --- ¡MÉTODOS DE BORRADO AÑADIDOS! ---
     public function deleteProviderPayment($id) {
         $stmt = $this->connection->prepare("DELETE FROM proveedor_pagos WHERE id = ?");
         $stmt->bind_param("i", $id);
@@ -122,7 +110,16 @@ class Report {
     
     public function getServicesReport($fechaInicio, $fechaFin) {
         $fin_completa = $fechaFin . ' 23:59:59';
-        $query = "SELECT i.descripcion, SUM(i.cantidad) as total_cantidad, COUNT(DISTINCT i.pedido_id) as total_pedidos FROM items_pedido i JOIN pedidos p ON i.pedido_id = p.id WHERE p.estado IN ('Entregado', 'Listo para Retirar') AND p.es_interno = 0 AND p.fecha_creacion BETWEEN ? AND ? GROUP BY i.descripcion ORDER BY total_cantidad DESC";
+        $query = "SELECT 
+                    i.descripcion, 
+                    SUM(i.cantidad) as total_cantidad, 
+                    COUNT(DISTINCT i.pedido_id) as total_pedidos
+                  FROM items_pedido i
+                  JOIN pedidos p ON i.pedido_id = p.id
+                  WHERE p.estado IN ('Entregado', 'Listo para Retirar') AND p.es_interno = 0 AND p.fecha_creacion BETWEEN ? AND ?
+                  GROUP BY i.descripcion
+                  ORDER BY total_cantidad DESC";
+        
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("ss", $fechaInicio, $fin_completa);
         $stmt->execute();

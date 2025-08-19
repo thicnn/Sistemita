@@ -72,6 +72,13 @@ if (preg_match('#^clients/edit/(\d+)$#', $url, $matches)) {
         case 'admin/products': $adminController->listProducts(); break;
         case 'admin/products/create': ($method === 'POST') ? $adminController->storeProduct() : $adminController->showProductCreateForm(); break;
 
+        case 'reports/delete_payments':
+            if ($method === 'POST') $reportController->deletePayments();
+            break;
+        case 'reports/delete_counters':
+            if ($method === 'POST') $reportController->deleteCounters();
+            break;
+
         default:
             header("HTTP/1.0 404 Not Found");
             echo "<h1>Error 404: Página no encontrada</h1>";

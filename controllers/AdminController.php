@@ -23,11 +23,26 @@ class AdminController {
     // Muestra el panel principal de Ajustes/Configuración
     public function settings() {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
+        
+        $papeles = $this->configModel->findByType('papel');
+        $acabados = $this->configModel->findByType('acabado');
+
         require_once '../views/layouts/header.php';
         require_once '../views/pages/admin/settings.php';
         require_once '../views/layouts/footer.php';
     }
 
+    public function storeSetting() {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            header('Location: /sistemagestion/dashboard');
+            exit();
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->configModel->create($_POST['tipo'], $_POST['nombre'], $_POST['valor']);
+        }
+        header('Location: /sistemagestion/admin/settings');
+        exit();
+    }
     // --- GESTIÓN DE PRODUCTOS ---
     public function listProducts() {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
