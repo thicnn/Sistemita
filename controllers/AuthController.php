@@ -1,16 +1,19 @@
 <?php
 require_once '../models/User.php';
 require_once '../models/Order.php';
+require_once '../models/Client.php'; // ¡Necesitamos el ClientModel!
 
 class AuthController
 {
     private $userModel;
     private $orderModel;
 
+    private $clientModel; // Añadimos la propiedad
     public function __construct($db_connection)
     {
         $this->userModel = new User($db_connection);
         $this->orderModel = new Order($db_connection);
+        $this->clientModel = new Client($db_connection); // Lo instanciamos
     }
 
     public function showLoginForm()
@@ -27,16 +30,19 @@ class AuthController
             exit();
         }
 
-        // 1. Obtenemos todos los pedidos del día de hoy
+        // 1. Obtenemos los pedidos del día
         $todaysOrders = $this->orderModel->findTodaysOrders();
 
-        // 2. Los organizamos en listas separadas por su estado
+        // 2. Los organizamos por estado
         $pedidosPorEstado = [];
         foreach ($todaysOrders as $pedido) {
             $pedidosPorEstado[$pedido['estado']][] = $pedido;
         }
 
-        // 3. Pasamos la lista organizada a la vista
+        // 3. ¡NUEVO! Obtenemos el ranking de los mejores clientes
+        $topClients = $this->clientModel->getTopClientsByOrderCount();
+
+        // 4. Pasamos todos los datos a la vista
         require_once '../views/layouts/header.php';
         require_once '../views/pages/dashboard/index.php';
         require_once '../views/layouts/footer.php';

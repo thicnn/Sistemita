@@ -14,32 +14,26 @@ class Client
      * Busca todos los clientes aplicando los filtros proporcionados.
      */
     public function findAllWithFilters($filters) {
-        $query = "SELECT * FROM " . $this->table_name;
-        $where = []; 
-        $params = []; 
-        $types = '';
+        // Consulta SQL que ahora une la tabla de pedidos para contar cuántos tiene cada cliente
+        $query = "SELECT c.*, COUNT(p.id) as total_pedidos 
+                  FROM " . $this->table_name . " c
+                  LEFT JOIN pedidos p ON c.id = p.cliente_id";
+
+        $where = []; $params = []; $types = '';
 
         if (!empty($filters['search'])) {
-            $where[] = "(nombre LIKE ? OR telefono LIKE ? OR email LIKE ?)";
+            $where[] = "(c.nombre LIKE ? OR c.telefono LIKE ? OR c.email LIKE ?)";
             $searchTerm = '%' . $filters['search'] . '%';
             array_push($params, $searchTerm, $searchTerm, $searchTerm);
             $types .= 'sss';
         }
-        if (!empty($filters['fecha'])) {
-            $where[] = "DATE(fecha_creacion) = ?";
-            $params[] = $filters['fecha'];
-            $types .= 's';
-        }
 
-        if (!empty($where)) { 
-            $query .= " WHERE " . implode(' AND ', $where); 
-        }
-        $query .= " ORDER BY nombre ASC";
+        if (!empty($where)) { $query .= " WHERE " . implode(' AND ', $where); }
+
+        $query .= " GROUP BY c.id ORDER BY c.nombre ASC";
 
         $stmt = $this->connection->prepare($query);
-        if (!empty($params)) { 
-            $stmt->bind_param($types, ...$params); 
-        }
+        if (!empty($params)) { $stmt->bind_param($types, ...$params); }
         $stmt->execute();
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
@@ -118,6 +112,18 @@ class Client
         $stmt->bind_param("ss", $likeTerm, $likeTerm);
         $stmt->execute();
         $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getTopClientsByOrderCount() {
+        $query = "SELECT c.nombre, COUNT(p.id) as total_pedidos 
+                  FROM clientes c
+                  JOIN pedidos p ON c.id = p.cliente_id
+                  WHERE p.fecha_creacion >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
+                  GROUP BY c.id, c.nombre
+                  ORDER BY total_pedidos DESC
+                  LIMIT 5"; // Mostramos el top 5
+        $result = $this->connection->query($query);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 }
