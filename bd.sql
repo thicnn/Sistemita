@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-08-2025 a las 07:09:01
+-- Tiempo de generación: 19-08-2025 a las 05:32:10
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -54,12 +54,20 @@ INSERT INTO `clientes` (`id`, `nombre`, `telefono`, `email`, `notas`, `fecha_cre
 CREATE TABLE `impresora_contadores` (
   `id` int(11) NOT NULL,
   `maquina_nombre` varchar(100) NOT NULL,
-  `periodo` varchar(50) NOT NULL,
-  `fecha_registro` date NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
   `contador_bn` int(11) DEFAULT NULL,
   `contador_color` int(11) DEFAULT NULL,
   `notas` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `impresora_contadores`
+--
+
+INSERT INTO `impresora_contadores` (`id`, `maquina_nombre`, `fecha_inicio`, `fecha_fin`, `contador_bn`, `contador_color`, `notas`) VALUES
+(1, 'Bh-227', '2025-08-01', '2025-08-19', 123123, 123123, ''),
+(2, 'Bh-227', '2025-08-15', '2025-08-19', 123123, 123123, '');
 
 -- --------------------------------------------------------
 
@@ -93,7 +101,11 @@ INSERT INTO `items_pedido` (`id`, `pedido_id`, `tipo`, `categoria`, `descripcion
 (8, 9, 'impresion', 'color', 'Color-Papel 90Grms-Texto', 12, 204.00, 0),
 (9, 10, 'impresion', 'color', 'Color-A4-Imagen', 12, 240.00, 1),
 (10, 15, 'fotocopia', 'blanco y negro', 'B&N-Papel Duro', 112, 2464.00, 1),
-(11, 16, 'fotocopia', 'blanco y negro', 'B&N-A3', 112, 1680.00, 0);
+(11, 16, 'fotocopia', 'blanco y negro', 'B&N-A3', 112, 1680.00, 0),
+(12, 17, 'fotocopia', 'blanco y negro', 'B&N-A3', 123, 1845.00, 0),
+(13, 18, 'fotocopia', 'color', 'Color-Oficio', 123, 2091.00, 0),
+(14, 20, 'impresion', 'color', 'Color-A3-Texto', 123, 3198.00, 0),
+(15, 21, 'impresion', 'blanco y negro', 'B&N-Papel Duro-Texto', 123, 2460.00, 0);
 
 -- --------------------------------------------------------
 
@@ -159,6 +171,7 @@ CREATE TABLE `pedidos` (
   `estado` varchar(50) NOT NULL,
   `notas_internas` text DEFAULT NULL,
   `motivo_cancelacion` text DEFAULT NULL,
+  `es_interno` tinyint(1) NOT NULL DEFAULT 0,
   `costo_total` decimal(10,2) NOT NULL,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `ultima_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -168,19 +181,23 @@ CREATE TABLE `pedidos` (
 -- Volcado de datos para la tabla `pedidos`
 --
 
-INSERT INTO `pedidos` (`id`, `cliente_id`, `usuario_id`, `estado`, `notas_internas`, `motivo_cancelacion`, `costo_total`, `fecha_creacion`, `ultima_actualizacion`) VALUES
-(1, NULL, 1, 'Solicitud', NULL, NULL, 0.00, '2025-08-18 02:22:22', '2025-08-18 02:22:22'),
-(2, NULL, 1, 'Solicitud', NULL, NULL, 0.00, '2025-08-18 02:36:14', '2025-08-18 02:36:14'),
-(3, NULL, 1, 'Solicitud', NULL, NULL, 0.00, '2025-08-18 02:36:22', '2025-08-18 02:36:22'),
-(4, NULL, 1, 'Solicitud', NULL, NULL, 0.00, '2025-08-18 02:38:20', '2025-08-18 02:38:20'),
-(5, NULL, 1, 'Solicitud', NULL, NULL, 0.00, '2025-08-18 02:38:32', '2025-08-18 02:38:32'),
-(6, NULL, 1, 'Cotización', '0', NULL, 10.00, '2025-08-18 02:51:09', '2025-08-18 02:51:09'),
-(7, NULL, 1, 'Cotización', '0', NULL, 462.00, '2025-08-18 02:51:22', '2025-08-18 02:51:22'),
-(8, NULL, 1, 'Cotización', '0', NULL, 240.00, '2025-08-18 02:58:37', '2025-08-18 02:58:37'),
-(9, NULL, 1, 'Listo para Retirar', 'nashe', NULL, 528.00, '2025-08-18 02:59:12', '2025-08-18 03:11:58'),
-(10, 2, 1, 'Cancelado', NULL, 'Nashe', 240.00, '2025-08-18 03:24:08', '2025-08-18 04:26:53'),
-(15, 4, 1, 'Cancelado', '0', 'porquesi\r\n', 2464.00, '2025-08-18 04:52:07', '2025-08-18 04:52:29'),
-(16, 4, 1, 'Cotización', '0', NULL, 1680.00, '2025-08-18 04:58:52', '2025-08-18 04:58:52');
+INSERT INTO `pedidos` (`id`, `cliente_id`, `usuario_id`, `estado`, `notas_internas`, `motivo_cancelacion`, `es_interno`, `costo_total`, `fecha_creacion`, `ultima_actualizacion`) VALUES
+(1, NULL, 1, 'Solicitud', NULL, NULL, 0, 0.00, '2025-08-18 02:22:22', '2025-08-18 02:22:22'),
+(2, NULL, 1, 'Solicitud', NULL, NULL, 0, 0.00, '2025-08-18 02:36:14', '2025-08-18 02:36:14'),
+(3, NULL, 1, 'Solicitud', NULL, NULL, 0, 0.00, '2025-08-18 02:36:22', '2025-08-18 02:36:22'),
+(4, NULL, 1, 'Solicitud', NULL, NULL, 0, 0.00, '2025-08-18 02:38:20', '2025-08-18 02:38:20'),
+(5, NULL, 1, 'Solicitud', NULL, NULL, 0, 0.00, '2025-08-18 02:38:32', '2025-08-18 02:38:32'),
+(6, NULL, 1, 'Cotización', '0', NULL, 0, 10.00, '2025-08-18 02:51:09', '2025-08-18 02:51:09'),
+(7, NULL, 1, 'Cotización', '0', NULL, 0, 462.00, '2025-08-18 02:51:22', '2025-08-18 02:51:22'),
+(8, NULL, 1, 'Cotización', '0', NULL, 0, 240.00, '2025-08-18 02:58:37', '2025-08-18 02:58:37'),
+(9, NULL, 1, 'Listo para Retirar', 'nashe', NULL, 0, 528.00, '2025-08-18 02:59:12', '2025-08-18 03:11:58'),
+(10, 2, 1, 'Cancelado', NULL, 'Nashe', 0, 240.00, '2025-08-18 03:24:08', '2025-08-18 04:26:53'),
+(15, 4, 1, 'Cancelado', '0', 'porquesi\r\n', 0, 2464.00, '2025-08-18 04:52:07', '2025-08-18 04:52:29'),
+(16, 4, 1, 'Cotización', '0', NULL, 0, 1680.00, '2025-08-18 04:58:52', '2025-08-18 04:58:52'),
+(17, 4, 1, 'Solicitud', '0', NULL, 0, 1845.00, '2025-08-18 05:42:47', '2025-08-18 05:42:47'),
+(18, 4, 1, 'Solicitud', '123123', NULL, 0, 2091.00, '2025-08-19 02:09:32', '2025-08-19 02:09:32'),
+(20, 2, 1, 'Entregado', '123', NULL, 0, 3198.00, '2025-08-19 02:19:11', '2025-08-19 02:22:01'),
+(21, 4, 1, 'Cancelado', '0', 'asdadsda', 0, 2460.00, '2025-08-19 02:20:55', '2025-08-19 02:21:06');
 
 -- --------------------------------------------------------
 
@@ -282,6 +299,13 @@ CREATE TABLE `proveedor_pagos` (
   `descripcion` varchar(255) NOT NULL,
   `monto` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `proveedor_pagos`
+--
+
+INSERT INTO `proveedor_pagos` (`id`, `fecha_pago`, `descripcion`, `monto`) VALUES
+(2, '2025-08-19', 'adad', 123123.00);
 
 -- --------------------------------------------------------
 
@@ -400,13 +424,13 @@ ALTER TABLE `clientes`
 -- AUTO_INCREMENT de la tabla `impresora_contadores`
 --
 ALTER TABLE `impresora_contadores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `items_pedido`
 --
 ALTER TABLE `items_pedido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `items_pedido_materiales`
@@ -430,7 +454,7 @@ ALTER TABLE `pagos`
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos_historial`
@@ -448,7 +472,7 @@ ALTER TABLE `productos`
 -- AUTO_INCREMENT de la tabla `proveedor_pagos`
 --
 ALTER TABLE `proveedor_pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
