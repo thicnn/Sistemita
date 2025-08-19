@@ -1,21 +1,31 @@
 <?php
 require_once '../models/Client.php';
+<<<<<<< HEAD
 require_once '../models/Order.php';
+=======
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
 
 class ClientController
 {
     private $clientModel;
+<<<<<<< HEAD
     private $orderModel;
+=======
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
 
     public function __construct($db_connection)
     {
         $this->clientModel = new Client($db_connection);
+<<<<<<< HEAD
         $this->orderModel = new Order($db_connection);
+=======
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     }
 
     public function index()
     {
         if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
+<<<<<<< HEAD
         
         $filters = [
             'search' => $_GET['search'] ?? '',
@@ -23,11 +33,15 @@ class ClientController
         ];
 
         $clients = $this->clientModel->findAllWithFilters($filters);
+=======
+        $clients = $this->clientModel->findAll();
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         require_once '../views/layouts/header.php';
         require_once '../views/pages/clients/index.php';
         require_once '../views/layouts/footer.php';
     }
 
+<<<<<<< HEAD
     public function show($id) {
         if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
         
@@ -43,6 +57,8 @@ class ClientController
         require_once '../views/layouts/footer.php';
     }
 
+=======
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function showCreateForm()
     {
         if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
@@ -59,6 +75,10 @@ class ClientController
         exit();
     }
 
+<<<<<<< HEAD
+=======
+    // --- MÉTODOS AHORA PROTEGIDOS ---
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function showEditForm($id)
     {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
@@ -91,6 +111,10 @@ class ClientController
         header('Location: /sistemagestion/clients');
         exit();
     }
+<<<<<<< HEAD
+=======
+    // --- FIN DE MÉTODOS PROTEGIDOS ---
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
 
     public function search() {
         if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['term'])) {

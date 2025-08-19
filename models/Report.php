@@ -6,6 +6,7 @@ class Report {
         $this->connection = $db_connection;
     }
 
+<<<<<<< HEAD
     public function countOrdersByStatus() {
         $query = "SELECT estado, COUNT(id) as total FROM pedidos GROUP BY estado";
         $result = $this->connection->query($query);
@@ -44,6 +45,15 @@ class Report {
         }
         $stmt->execute();
         $result = $stmt->get_result();
+=======
+    public function countOrdersByStatus() { /* ... se mantiene igual ... */ }
+    public function getProductionCountForPeriod($maquina_id, $tipo, $categoria, $inicio, $fin) { /* ... se mantiene igual ... */ }
+
+    // --- MÉTODOS NUEVOS Y MEJORADOS ---
+    public function getLatestCounters() {
+        $query = "SELECT * FROM impresora_contadores ORDER BY fecha_fin DESC LIMIT 2";
+        $result = $this->connection->query($query);
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
@@ -55,6 +65,7 @@ class Report {
         return $stmt->execute();
     }
 
+<<<<<<< HEAD
     public function getProviderPayments($filters = []) {
         $query = "SELECT * FROM proveedor_pagos";
         $where = []; 
@@ -88,11 +99,17 @@ class Report {
     }
 
     // --- ¡MÉTODOS DE BORRADO AÑADIDOS! ---
+=======
+    public function saveProviderPayment($fecha, $descripcion, $monto) { /* ... se mantiene igual ... */ }
+    public function getProviderPayments() { /* ... se mantiene igual ... */ }
+
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function deleteProviderPayment($id) {
         $stmt = $this->connection->prepare("DELETE FROM proveedor_pagos WHERE id = ?");
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
+<<<<<<< HEAD
 
     public function deleteAllCounters() {
         $this->connection->query("TRUNCATE TABLE `impresora_contadores`");
@@ -129,4 +146,6 @@ class Report {
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+=======
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
 }

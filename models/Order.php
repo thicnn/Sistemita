@@ -11,6 +11,7 @@ class Order
         $this->connection = $db_connection;
     }
 
+<<<<<<< HEAD
     public function findAllWithFilters($filters)
     {
         $query = "SELECT p.id, p.estado, p.costo_total, p.fecha_creacion, c.nombre as nombre_cliente 
@@ -65,6 +66,18 @@ class Order
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
     
+=======
+    public function findAll()
+    {
+        $query = "SELECT p.id, p.estado, p.costo_total, p.fecha_creacion, c.nombre as nombre_cliente 
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN clientes c ON p.cliente_id = c.id
+                  ORDER BY p.fecha_creacion DESC";
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function findByStatuses($statuses)
     {
         $placeholders = implode(',', array_fill(0, count($statuses), '?'));
@@ -90,7 +103,11 @@ class Order
 
         if (!$pedido) return null;
 
+<<<<<<< HEAD
         $query_items = "SELECT * FROM " . $this->items_table_name . " WHERE pedido_id = ?";
+=======
+        $query_items = "SELECT * FROM items_pedido WHERE pedido_id = ?";
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         $stmt_items = $this->connection->prepare($query_items);
         $stmt_items->bind_param("i", $id);
         $stmt_items->execute();
@@ -113,6 +130,7 @@ class Order
         return $stmt->execute();
     }
 
+<<<<<<< HEAD
     public function update($id, $estado, $notas, $motivo_cancelacion, $es_interno) {
         if ($motivo_cancelacion !== null) { $estado = 'Cancelado'; }
         $query = "UPDATE " . $this->table_name . " SET estado = ?, notas_internas = ?, motivo_cancelacion = ?, es_interno = ? WHERE id = ?";
@@ -129,6 +147,29 @@ class Order
             $query_producto = "SELECT precio FROM productos WHERE descripcion = ? LIMIT 1";
             $stmt_producto = $this->connection->prepare($query_producto);
     
+=======
+    public function update($id, $estado, $notas, $motivo_cancelacion = null)
+    {
+        // Si hay un motivo de cancelación, el estado siempre será "Cancelado"
+        if ($motivo_cancelacion !== null) {
+            $estado = 'Cancelado';
+        }
+        $query = "UPDATE " . $this->table_name . " SET estado = ?, notas_internas = ?, motivo_cancelacion = ? WHERE id = ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("sssi", $estado, $notas, $motivo_cancelacion, $id);
+        return $stmt->execute();
+    }
+
+    public function create($cliente_id, $usuario_id, $estado, $notas, $items)
+    {
+        $this->connection->begin_transaction();
+        try {
+            // 1. Recalcular el precio total en el servidor por seguridad
+            $costo_total_seguro = 0;
+            $query_producto = "SELECT precio FROM productos WHERE descripcion = ? LIMIT 1";
+            $stmt_producto = $this->connection->prepare($query_producto);
+
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
             foreach ($items['descripcion'] as $index => $descripcion) {
                 $cantidad = (int)$items['cantidad'][$index];
                 if (!empty($descripcion) && $cantidad > 0) {
@@ -140,6 +181,7 @@ class Order
                     }
                 }
             }
+<<<<<<< HEAD
     
             $query_pedido = "INSERT INTO " . $this->table_name . " (cliente_id, usuario_id, estado, notas_internas, costo_total, es_interno) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt_pedido = $this->connection->prepare($query_pedido);
@@ -148,6 +190,18 @@ class Order
     
             $pedido_id = $this->connection->insert_id;
     
+=======
+
+            // 2. Insertar el pedido principal
+            $query_pedido = "INSERT INTO " . $this->table_name . " (cliente_id, usuario_id, estado, notas_internas, costo_total) VALUES (?, ?, ?, ?, ?)";
+            $stmt_pedido = $this->connection->prepare($query_pedido);
+            $stmt_pedido->bind_param("iisid", $cliente_id, $usuario_id, $estado, $notas, $costo_total_seguro);
+            $stmt_pedido->execute();
+
+            $pedido_id = $this->connection->insert_id;
+
+            // 3. Insertar cada ítem del pedido con los nombres de columna correctos
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
             $query_item = "INSERT INTO " . $this->items_table_name . " (pedido_id, tipo, categoria, descripcion, cantidad, subtotal, doble_faz) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt_item = $this->connection->prepare($query_item);
 
@@ -158,8 +212,13 @@ class Order
                     $stmt_producto->execute();
                     $resultado = $stmt_producto->get_result()->fetch_assoc();
                     $subtotal_item = $resultado['precio'] * $cantidad;
+<<<<<<< HEAD
                     
                     $tipo_item = $items['tipo'][$index];
+=======
+
+                    $tipo_item = $items['tipo'][$index]; // ¡Nombre de variable corregido!
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
                     $categoria = $items['categoria'][$index];
                     $doble_faz = isset($items['doble_faz'][$index]) ? 1 : 0;
 
@@ -167,22 +226,37 @@ class Order
                     $stmt_item->execute();
                 }
             }
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
             $this->connection->commit();
             return true;
         } catch (Exception $e) {
             $this->connection->rollback();
+<<<<<<< HEAD
             error_log("Error al crear pedido: " . $e->getMessage()); 
             return false;
         }
     }
 
+=======
+            error_log("Error al crear pedido: " . $e->getMessage());
+            return false;
+        }
+    }
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
     public function getSalesReport($fechaInicio, $fechaFin)
     {
         $fechaFinCompleta = $fechaFin . ' 23:59:59';
         $query = "SELECT SUM(costo_total) as total_ventas, COUNT(id) as cantidad_pedidos 
                   FROM " . $this->table_name . " 
+<<<<<<< HEAD
                   WHERE fecha_creacion BETWEEN ? AND ? AND estado = 'Entregado' AND es_interno = 0";
+=======
+                  WHERE fecha_creacion BETWEEN ? AND ? AND estado NOT IN ('Cancelado', 'Cotización')";
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("ss", $fechaInicio, $fechaFinCompleta);
         $stmt->execute();
@@ -195,6 +269,7 @@ class Order
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("s", $status);
         $stmt->execute();
+<<<<<<< HEAD
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
@@ -229,3 +304,12 @@ class Order
         return true;
     }
 }
+=======
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    public function getMonthlySalesComparison() {
+        $query = "SELECT DATE_FORMAT(fecha_creacion, '%Y-%m') as mes, COUNT(id) as total_pedidos FROM pedidos WHERE estado NOT IN ('Cancelado', 'Cotización') GROUP BY mes ORDER BY mes DESC LIMIT 2";
+        return $this->connection->query($query)->fetch_all(MYSQLI_ASSOC);
+    }
+}
+>>>>>>> d1e912453c5dcfd0af21d9fc4c6650aa3443e317
