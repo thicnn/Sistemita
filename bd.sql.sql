@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 19-08-2025 a las 05:32:10
+-- Tiempo de generación: 19-08-2025 a las 23:52:35
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -43,7 +43,8 @@ CREATE TABLE `clientes` (
 INSERT INTO `clientes` (`id`, `nombre`, `telefono`, `email`, `notas`, `fecha_creacion`) VALUES
 (2, 'thiago', '123132', 'thicun0333@gmail.com', 'dada', '2025-08-18 03:08:55'),
 (3, 'thiago', '123123123', 'thicun0433@gmail.com', 'thiaguito\r\n', '2025-08-18 03:37:11'),
-(4, 'idogod', '555555', 'nadie@gmail.com', 'adadd', '2025-08-18 04:33:02');
+(4, 'idogod', '555555', 'nadie@gmail.com', 'adadd', '2025-08-18 04:33:02'),
+(5, 'daniela', '092651584', 'mamut@gmail.com', 'da', '2025-08-19 21:31:06');
 
 -- --------------------------------------------------------
 
@@ -56,8 +57,8 @@ CREATE TABLE `impresora_contadores` (
   `maquina_nombre` varchar(100) NOT NULL,
   `fecha_inicio` date NOT NULL,
   `fecha_fin` date NOT NULL,
-  `contador_bn` int(11) DEFAULT NULL,
-  `contador_color` int(11) DEFAULT NULL,
+  `contador_bn` int(11) NOT NULL,
+  `contador_color` int(11) DEFAULT 0,
   `notas` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -66,8 +67,8 @@ CREATE TABLE `impresora_contadores` (
 --
 
 INSERT INTO `impresora_contadores` (`id`, `maquina_nombre`, `fecha_inicio`, `fecha_fin`, `contador_bn`, `contador_color`, `notas`) VALUES
-(1, 'Bh-227', '2025-08-01', '2025-08-19', 123123, 123123, ''),
-(2, 'Bh-227', '2025-08-15', '2025-08-19', 123123, 123123, '');
+(4, 'Bh-227', '2025-08-01', '2025-08-07', 1200, 0, ''),
+(5, 'Bh-227', '2025-08-08', '2025-08-15', 1330, 0, '');
 
 -- --------------------------------------------------------
 
@@ -105,7 +106,8 @@ INSERT INTO `items_pedido` (`id`, `pedido_id`, `tipo`, `categoria`, `descripcion
 (12, 17, 'fotocopia', 'blanco y negro', 'B&N-A3', 123, 1845.00, 0),
 (13, 18, 'fotocopia', 'color', 'Color-Oficio', 123, 2091.00, 0),
 (14, 20, 'impresion', 'color', 'Color-A3-Texto', 123, 3198.00, 0),
-(15, 21, 'impresion', 'blanco y negro', 'B&N-Papel Duro-Texto', 123, 2460.00, 0);
+(15, 21, 'impresion', 'blanco y negro', 'B&N-Papel Duro-Texto', 123, 2460.00, 0),
+(16, 22, 'impresion', 'color', 'Color-A3-Texto', 12, 312.00, 0);
 
 -- --------------------------------------------------------
 
@@ -156,7 +158,8 @@ CREATE TABLE `pagos` (
 INSERT INTO `pagos` (`id`, `pedido_id`, `monto`, `metodo_pago`, `fecha_pago`) VALUES
 (1, 10, 123.00, 'Efectivo', '2025-08-18 04:14:29'),
 (2, 8, 240.00, 'Efectivo', '2025-08-18 04:34:55'),
-(3, 15, 123.00, 'Efectivo', '2025-08-18 04:52:56');
+(3, 15, 123.00, 'Efectivo', '2025-08-18 04:52:56'),
+(4, 22, 210.00, 'Efectivo', '2025-08-19 21:45:27');
 
 -- --------------------------------------------------------
 
@@ -197,7 +200,8 @@ INSERT INTO `pedidos` (`id`, `cliente_id`, `usuario_id`, `estado`, `notas_intern
 (17, 4, 1, 'Solicitud', '0', NULL, 0, 1845.00, '2025-08-18 05:42:47', '2025-08-18 05:42:47'),
 (18, 4, 1, 'Solicitud', '123123', NULL, 0, 2091.00, '2025-08-19 02:09:32', '2025-08-19 02:09:32'),
 (20, 2, 1, 'Entregado', '123', NULL, 0, 3198.00, '2025-08-19 02:19:11', '2025-08-19 02:22:01'),
-(21, 4, 1, 'Cancelado', '0', 'asdadsda', 0, 2460.00, '2025-08-19 02:20:55', '2025-08-19 02:21:06');
+(21, 4, 1, 'Cancelado', '0', 'asdadsda', 0, 2460.00, '2025-08-19 02:20:55', '2025-08-19 02:21:06'),
+(22, 5, 1, 'Entregado', '0', NULL, 0, 312.00, '2025-08-19 21:45:05', '2025-08-19 21:45:50');
 
 -- --------------------------------------------------------
 
@@ -299,13 +303,6 @@ CREATE TABLE `proveedor_pagos` (
   `descripcion` varchar(255) NOT NULL,
   `monto` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `proveedor_pagos`
---
-
-INSERT INTO `proveedor_pagos` (`id`, `fecha_pago`, `descripcion`, `monto`) VALUES
-(2, '2025-08-19', 'adad', 123123.00);
 
 -- --------------------------------------------------------
 
@@ -418,19 +415,19 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `impresora_contadores`
 --
 ALTER TABLE `impresora_contadores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `items_pedido`
 --
 ALTER TABLE `items_pedido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `items_pedido_materiales`
@@ -448,13 +445,13 @@ ALTER TABLE `materiales`
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos_historial`
