@@ -1,10 +1,17 @@
 <?php
 // Lógica para mostrar fechas en español sin usar funciones obsoletas
-$fmtMesAnio = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, null, null, 'MMMM \'de\' yyyy');
-$fmtMes = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, null, null, 'MMMM');
-
-$nombreMesSeleccionado = ucfirst($fmtMesAnio->format(strtotime($startDate)));
-$nombreProximoMes = ucfirst($fmtMes->format(strtotime('+1 month')));
+// Asegúrate de que la extensión intl esté habilitada en tu php.ini
+if (class_exists('IntlDateFormatter')) {
+    $fmtMesAnio = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, null, null, 'MMMM \'de\' yyyy');
+    $fmtMes = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, null, null, 'MMMM');
+    $nombreMesSeleccionado = ucfirst($fmtMesAnio->format(strtotime($startDate)));
+    $nombreProximoMes = ucfirst($fmtMes->format(strtotime('+1 month')));
+} else {
+    // Alternativa por si intl no está disponible
+    $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    $nombreMesSeleccionado = $meses[date('n', strtotime($startDate)) - 1] . ' de ' . date('Y', strtotime($startDate));
+    $nombreProximoMes = $meses[date('n', strtotime('+1 month')) - 1];
+}
 ?>
 
 <h2>Panel de Reportes</h2>
@@ -89,7 +96,7 @@ $nombreProximoMes = ucfirst($fmtMes->format(strtotime('+1 month')));
         <div class="card-grid">
             <div class="report-card form-card">
                 <h4>Registrar Pago a Proveedor</h4>
-                <form id="payment-form" action="/sistemagestion/reports/store_payment" method="POST">
+                <form id="payment-form" action="/sistemagestion/reports/store_provider_payment" method="POST">
                     <input type="date" name="fecha_pago" value="<?php echo date('Y-m-d'); ?>" required>
                     <input type="text" name="descripcion" placeholder="Descripción (ej: Alquiler Agosto)" required>
                     <input type="number" name="monto" step="0.01" placeholder="Monto" required>
@@ -140,6 +147,9 @@ $nombreProximoMes = ucfirst($fmtMes->format(strtotime('+1 month')));
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // --- LÓGICA COMPLETA PARA INTERACTIVIDAD TOTAL ---
+
+    // Variable iniciales con los datos de PHP
     let paymentsData = <?php echo json_encode($providerPayments ?? []); ?>;
     let countersData = <?php echo json_encode($counterHistory ?? []); ?>;
 
@@ -154,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Date(dateString + 'T00:00:00').toLocaleDateString('es-ES', options);
     }
 
+    // --- SECCIÓN DE PAGOS A PROVEEDOR ---
     function renderPaymentsTable(payments) {
         paymentsBody.innerHTML = '';
         if(!payments || payments.length === 0) {
@@ -178,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await fetch('/sistemagestion/reports/store_provider_payment', { method: 'POST', body: formData });
             
             const newPayment = Object.fromEntries(formData.entries());
-            newPayment.id = Date.now();
+            newPayment.id = Date.now(); // ID temporal para la vista
             paymentsData.unshift(newPayment);
             renderPaymentsTable(paymentsData);
             this.reset();
@@ -202,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.payment-checkbox').forEach(cb => cb.checked = e.target.checked);
     });
 
+    // --- SECCIÓN DE CONTADORES ---
     function renderCountersTable(counters) {
         countersBody.innerHTML = '';
         if(!counters || counters.length === 0) {
@@ -253,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.counter-checkbox').forEach(cb => cb.checked = e.target.checked);
     });
 
+    // Script para el formulario de contadores
     document.getElementById('maquina-selector').addEventListener('change', function(){
         const colorInput = document.getElementById('contador-color');
         if (this.value === 'Bh-227') {
@@ -263,6 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }).dispatchEvent(new Event('change'));
 
+    // Render inicial de las tablas
     renderPaymentsTable(paymentsData);
     renderCountersTable(countersData);
 });

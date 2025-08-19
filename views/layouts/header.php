@@ -106,7 +106,6 @@
             if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'administrador'): ?>
                 <a href="/sistemagestion/reports">Reportes</a>
                 <a href="/sistemagestion/admin/products">Productos</a>
-                <a href="/sistemagestion/admin/settings">Ajustes</a>
             <?php endif; ?>
             
             <a href="/sistemagestion/logout" class="logout">Cerrar Sesión</a>
