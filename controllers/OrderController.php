@@ -17,31 +17,40 @@ class OrderController
     }
 
     public function index()
-{
-    if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
-    
-    // Recoge los filtros de la URL (aunque no se usen, la función los espera)
-    $filters = [
-        'search' => $_GET['search'] ?? '',
-        'estado' => $_GET['estado'] ?? '',
-        'fecha_inicio' => $_GET['fecha_inicio'] ?? '',
-        'fecha_fin' => $_GET['fecha_fin'] ?? '',
-        'sort' => $_GET['sort'] ?? 'fecha_creacion', // Valor por defecto
-        'dir' => $_GET['dir'] ?? 'desc' // Dirección por defecto
-    ];
+    {
+        if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
+        
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'estado' => $_GET['estado'] ?? '',
+            'fecha_inicio' => $_GET['fecha_inicio'] ?? '',
+            'fecha_fin' => $_GET['fecha_fin'] ?? '',
+            'sort' => $_GET['sort'] ?? 'fecha_creacion',
+            'dir' => $_GET['dir'] ?? 'desc'
+        ];
 
-    // ¡LÍNEA CORREGIDA! Ahora usa el método correcto con filtros.
-    $orders = $this->orderModel->findAllWithFilters($filters);
-    
-    require_once '../views/layouts/header.php';
-    require_once '../views/pages/orders/index.php';
-    require_once '../views/layouts/footer.php';
-}
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) $page = 1;
+        $perPage = 15;
+
+        $totalOrders = $this->orderModel->countAllWithFilters($filters);
+        $totalPages = ceil($totalOrders / $perPage);
+        $offset = ($page - 1) * $perPage;
+
+        $orders = $this->orderModel->findAllWithFilters($filters, $perPage, $offset);
+        
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/orders/index.php';
+        require_once '../views/layouts/footer.php';
+    }
 
     public function showCreateForm()
     {
         if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
-        $clients = $this->clientModel->findAll();
+        
+        // ¡ESTA LÍNEA AHORA FUNCIONARÁ PERFECTAMENTE!
+        $clients = $this->clientModel->findAll(); 
+        
         $products = $this->productModel->findAllAvailable();
         require_once '../views/layouts/header.php';
         require_once '../views/pages/orders/create.php';
@@ -61,11 +70,12 @@ class OrderController
                 $_POST['items'] ?? [],
                 $es_interno
             );
-            if ($success) {
-                header('Location: /sistemagestion/orders');
-            } else {
-                echo "Hubo un error al guardar el pedido. Revisa el log de errores.";
-            }
+            
+            $_SESSION['toast'] = $success 
+                ? ['message' => '¡Pedido creado con éxito!', 'type' => 'success']
+                : ['message' => 'Error al crear el pedido.', 'type' => 'danger'];
+
+            header('Location: /sistemagestion/orders');
             exit();
         }
     }
@@ -91,6 +101,9 @@ class OrderController
                 $monto = (float)$_POST['monto'];
                 if (!empty($monto) && is_numeric($monto) && $monto > 0 && $monto <= $saldoPendiente) {
                     $this->orderModel->addPayment($id, $monto, $_POST['metodo_pago']);
+                    $_SESSION['toast'] = ['message' => '¡Pago registrado correctamente!', 'type' => 'success'];
+                } else {
+                    $_SESSION['toast'] = ['message' => 'Monto de pago inválido.', 'type' => 'danger'];
                 }
             }
             header('Location: /sistemagestion/orders/show/' . $id);
@@ -111,21 +124,19 @@ class OrderController
     public function update($id)
     {
         if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
-        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nuevoEstado = $_POST['estado'];
+            $nuevoEstado = $_POST['estado'] ?? $this->orderModel->findByIdWithDetails($id)['estado'];
 
-            // --- ¡AQUÍ ESTÁ LA NUEVA LÓGICA! ---
-            // Si el nuevo estado es "Entregado", saldamos el pago antes de actualizar.
             if ($nuevoEstado === 'Entregado') {
                 $this->orderModel->settlePayment($id);
             }
-            // --- FIN DE LA NUEVA LÓGICA ---
-
+            
             $motivo_cancelacion = ($nuevoEstado === 'Cancelado' && !empty($_POST['motivo_cancelacion'])) ? $_POST['motivo_cancelacion'] : null;
             $es_interno = isset($_POST['es_interno']) ? 1 : 0;
             
             $this->orderModel->update($id, $nuevoEstado, $_POST['notas'], $motivo_cancelacion, $es_interno);
+
+            $_SESSION['toast'] = ['message' => '¡Pedido actualizado!', 'type' => 'info'];
             
             header('Location: /sistemagestion/orders/show/' . $id);
             exit();

@@ -11,7 +11,49 @@ class Order
         $this->connection = $db_connection;
     }
 
-    public function findAllWithFilters($filters)
+    // --- NUEVO MÉTODO PARA CONTAR (CORREGIDO) ---
+    public function countAllWithFilters($filters) {
+        $query = "SELECT COUNT(DISTINCT p.id) as total 
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN clientes c ON p.cliente_id = c.id";
+        
+        $where = []; $params = []; $types = '';
+
+        if (!empty($filters['search'])) {
+            $where[] = "(c.nombre LIKE ? OR p.id LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            array_push($params, $searchTerm, $searchTerm);
+            $types .= 'ss';
+        }
+        if (!empty($filters['estado'])) {
+            $where[] = "p.estado = ?";
+            $params[] = $filters['estado'];
+            $types .= 's';
+        }
+        if (!empty($filters['fecha_inicio'])) {
+            $where[] = "DATE(p.fecha_creacion) >= ?";
+            $params[] = $filters['fecha_inicio'];
+            $types .= 's';
+        }
+        if (!empty($filters['fecha_fin'])) {
+            $where[] = "DATE(p.fecha_creacion) <= ?";
+            $params[] = $filters['fecha_fin'];
+            $types .= 's';
+        }
+
+        if (!empty($where)) { $query .= " WHERE " . implode(' AND ', $where); }
+        
+        $stmt = $this->connection->prepare($query);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['total'] ?? 0;
+    }
+
+    // --- MÉTODO PRINCIPAL DE BÚSQUEDA (CORREGIDO) ---
+    public function findAllWithFilters($filters, $limit, $offset)
     {
         $query = "SELECT p.id, p.estado, p.costo_total, p.fecha_creacion, c.nombre as nombre_cliente 
                   FROM " . $this->table_name . " p
@@ -42,29 +84,36 @@ class Order
 
         if (!empty($where)) { $query .= " WHERE " . implode(' AND ', $where); }
 
-        // Lógica de Ordenamiento
-        $orderBy = 'p.fecha_creacion'; // Valor por defecto
-        $orderDir = 'DESC'; // Dirección por defecto
-        
+        $orderBy = 'p.fecha_creacion'; 
+        $orderDir = 'DESC';
         $allowedSorts = ['id', 'nombre_cliente', 'estado', 'costo_total', 'fecha_creacion'];
         if (!empty($filters['sort']) && in_array($filters['sort'], $allowedSorts)) {
             $orderBy = 'p.' . $filters['sort'];
-            if ($filters['sort'] === 'nombre_cliente') {
-                 $orderBy = 'c.nombre'; // Alias para el nombre del cliente
-            }
+            if ($filters['sort'] === 'nombre_cliente') { $orderBy = 'c.nombre'; }
         }
         if (!empty($filters['dir']) && in_array(strtoupper($filters['dir']), ['ASC', 'DESC'])) {
             $orderDir = strtoupper($filters['dir']);
         }
-        $query .= " ORDER BY $orderBy $orderDir";
+
+        $query .= " ORDER BY $orderBy $orderDir LIMIT ? OFFSET ?";
+        
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= 'ii';
 
         $stmt = $this->connection->prepare($query);
-        if (!empty($params)) { $stmt->bind_param($types, ...$params); }
+        
+        if (!empty($params)) { 
+            // Usamos el operador "splat" que es más moderno y seguro
+            $stmt->bind_param($types, ...$params); 
+        }
+        
         $stmt->execute();
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+    // --- EL RESTO DE MÉTODOS SE MANTIENEN IGUAL ---
 
     public function findTodaysOrders()
     {
@@ -80,27 +129,23 @@ class Order
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+    
     public function getDashboardStats()
     {
-        // Usamos CURDATE() que es una función nativa de SQL para obtener la fecha actual del servidor de la base de datos.
-        // Esto evita cualquier posible problema de zona horaria entre PHP y MySQL.
         $query = "
             SELECT
                 (SELECT COUNT(id) FROM pedidos WHERE DATE(fecha_creacion) = CURDATE()) as todays_orders,
                 (SELECT SUM(monto) FROM pagos WHERE DATE(fecha_pago) = CURDATE()) as todays_sales
         ";
         $stmt = $this->connection->prepare($query);
-        
-        // No necesitamos pasarle la fecha desde PHP, la base de datos lo hace solo.
         $stmt->execute();
-        
         $result = $stmt->get_result()->fetch_assoc();
-        
         return [
             'todays_orders' => $result['todays_orders'] ?? 0,
-            'todays_sales' => $result['todays_sales'] ?? 0.00, // Aseguramos que devuelva un número
+            'todays_sales' => $result['todays_sales'] ?? 0.00,
         ];
     }
+
     public function findRecentOrders($limit = 5)
     {
         $query = "SELECT p.id, p.estado, p.costo_total, c.nombre as nombre_cliente 
@@ -114,7 +159,6 @@ class Order
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
-    
     
     public function findByStatuses($statuses)
     {
@@ -163,25 +207,17 @@ class Order
         $stmt->bind_param("ids", $pedido_id, $monto, $metodo_pago);
         return $stmt->execute();
     }
-    public function settlePayment($pedido_id) {
-        // 1. Obtener todos los detalles del pedido
-        $order = $this->findByIdWithDetails($pedido_id);
-        if (!$order) {
-            return false; // El pedido no existe
-        }
 
-        // 2. Calcular el saldo pendiente
+    public function settlePayment($pedido_id) {
+        $order = $this->findByIdWithDetails($pedido_id);
+        if (!$order) return false;
         $totalPagado = array_sum(array_column($order['pagos'], 'monto'));
         $saldoPendiente = $order['costo_total'] - $totalPagado;
-
-        // 3. Si hay saldo, registrar el pago final
-        if ($saldoPendiente > 0.009) { // Usamos un pequeño margen por si hay decimales
+        if ($saldoPendiente > 0.009) {
             $this->addPayment($pedido_id, $saldoPendiente, 'Efectivo (Automático)');
         }
-        
         return true;
     }
-
 
     public function update($id, $estado, $notas, $motivo_cancelacion, $es_interno) {
         if ($motivo_cancelacion !== null) { $estado = 'Cancelado'; }

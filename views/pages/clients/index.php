@@ -13,9 +13,9 @@
 </div>
 
 <?php if (empty($clients)): ?>
-    <div class="text-center p-5 bg-light rounded">
+    <div class="text-center p-5 bg-light rounded animated-card">
         <p class="fs-4 text-muted">No se encontraron clientes.</p>
-        <p>Intenta con otra búsqueda o crea un nuevo cliente.</p>
+        <p>Intenta con otra búsqueda o crea un nuevo cliente para empezar.</p>
     </div>
 <?php else: ?>
     <div class="row g-4">
@@ -50,45 +50,52 @@
                     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'administrador'): ?>
                     <div class="card-footer bg-white border-0 pt-0 text-end">
                         <a href="/sistemagestion/clients/edit/<?php echo $client['id']; ?>" class="btn btn-sm btn-outline-primary z-2 position-relative">Editar</a>
-                        <form action="/sistemagestion/clients/delete/<?php echo $client['id']; ?>" method="POST" onsubmit="return confirm('¿Estás seguro?');" class="d-inline z-2 position-relative">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger z-2 position-relative"
+                                data-bs-toggle="modal"
+                                data-bs-target="#confirmModal"
+                                data-action="/sistemagestion/clients/delete/<?php echo $client['id']; ?>">
+                            Eliminar
+                        </button>
                     </div>
                     <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
+
+    <?php if ($totalPages > 1): ?>
+    <nav class="mt-4" aria-label="Paginación de clientes">
+        <ul class="pagination justify-content-center">
+            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?page=<?php echo $page - 1; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page'=>''])); ?>">Anterior</a>
+            </li>
+
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page'=>''])); ?>">
+                        <?php echo $i; ?>
+                    </a>
+                </li>
+            <?php endfor; ?>
+
+            <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?page=<?php echo $page + 1; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page'=>''])); ?>">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+    <?php endif; ?>
 <?php endif; ?>
 
 <style>
-    /* Estilo para las tarjetas de cliente */
-    .client-card {
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
-    .client-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1) !important;
-    }
+    .client-card { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
+    .client-card:hover { transform: translateY(-5px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1) !important; }
     .avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
+        width: 50px; height: 50px; border-radius: 50%;
         background-color: var(--bs-primary-bg-subtle);
         color: var(--bs-primary-text-emphasis);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.5rem;
-        font-weight: bold;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 1.5rem; font-weight: bold;
     }
-    /* Animación de entrada */
-    @keyframes slideInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animated-card {
-        opacity: 0;
-        animation: slideInUp 0.6s ease-out forwards;
-    }
+    @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animated-card { opacity: 0; animation: slideInUp 0.6s ease-out forwards; }
 </style>

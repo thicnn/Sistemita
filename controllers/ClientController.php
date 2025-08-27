@@ -17,12 +17,19 @@ class ClientController
     {
         if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
         
-        $filters = [
-            'search' => $_GET['search'] ?? '',
-            'fecha' => $_GET['fecha'] ?? ''
-        ];
+        $filters = ['search' => $_GET['search'] ?? ''];
+        
+        // --- Lógica de Paginación ---
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) $page = 1;
+        $perPage = 6; // 6 clientes por página para el diseño de tarjetas
 
-        $clients = $this->clientModel->findAllWithFilters($filters);
+        $totalClients = $this->clientModel->countAllWithFilters($filters);
+        $totalPages = ceil($totalClients / $perPage);
+        $offset = ($page - 1) * $perPage;
+
+        $clients = $this->clientModel->findAllWithFilters($filters, $perPage, $offset);
+        
         require_once '../views/layouts/header.php';
         require_once '../views/pages/clients/index.php';
         require_once '../views/layouts/footer.php';
@@ -33,15 +40,25 @@ class ClientController
         
         $client = $this->clientModel->findById($id);
         
-        if ($client) {
-            $client['total_pedidos'] = $this->clientModel->countOrders($id);
-            $client['pedidos'] = $this->orderModel->findByClientId($id); 
+        if (!$client) {
+            // Manejar cliente no encontrado
+            header("HTTP/1.0 404 Not Found");
+            echo "<h1>Error 404: Cliente no encontrado</h1>";
+            exit();
         }
+
+        // Obtenemos el historial de pedidos del cliente
+        $client['pedidos'] = $this->orderModel->findByClientId($id); 
+        
+        // Calculamos algunas estadísticas
+        $client['total_gastado'] = array_sum(array_column($client['pedidos'], 'costo_total'));
+        $client['total_pedidos'] = count($client['pedidos']);
 
         require_once '../views/layouts/header.php';
         require_once '../views/pages/clients/show.php';
         require_once '../views/layouts/footer.php';
     }
+
 
     public function showCreateForm()
     {
@@ -55,6 +72,10 @@ class ClientController
     {
         if (!isset($_SESSION['user_id'])) { header('Location: /sistemagestion/login'); exit(); }
         $this->clientModel->create($_POST['nombre'], $_POST['telefono'], $_POST['email'], $_POST['notas']);
+        
+        // Crear notificación toast
+        $_SESSION['toast'] = ['message' => '¡Cliente creado con éxito!', 'type' => 'success'];
+        
         header('Location: /sistemagestion/clients');
         exit();
     }
@@ -78,6 +99,10 @@ class ClientController
             exit();
         }
         $this->clientModel->update($id, $_POST['nombre'], $_POST['telefono'], $_POST['email'], $_POST['notas']);
+        
+        // Crear notificación toast
+        $_SESSION['toast'] = ['message' => '¡Cliente actualizado correctamente!', 'type' => 'info'];
+
         header('Location: /sistemagestion/clients');
         exit();
     }
@@ -88,6 +113,10 @@ class ClientController
             exit();
         }
         $this->clientModel->delete($id);
+
+        // Crear notificación toast
+        $_SESSION['toast'] = ['message' => 'Cliente eliminado.', 'type' => 'danger'];
+        
         header('Location: /sistemagestion/clients');
         exit();
     }

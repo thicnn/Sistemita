@@ -17,7 +17,7 @@ class ReportController {
             exit(); 
         }
 
-        // --- LÓGICA DE FECHAS MEJORADA ---
+        // Lógica de fechas
         $selectedMonth = $_GET['month'] ?? date('Y-m');
         $startDate = $selectedMonth . '-01';
         $endDate = date("Y-m-t", strtotime($startDate));
@@ -25,17 +25,24 @@ class ReportController {
         $paymentFilters = ['month' => $_GET['payment_month'] ?? ''];
         $counterFilters = ['month' => $_GET['counter_month'] ?? ''];
 
-        // --- LLAMADAS A LOS MODELOS CON LOS DATOS CORRECTOS ---
-        $salesData = $this->orderModel->getSalesReport($startDate, $endDate);
+        // Llamadas a los modelos
         $statusCounts = $this->reportModel->countOrdersByStatus($startDate, $endDate); 
         $providerPayments = $this->reportModel->getProviderPayments($paymentFilters);
         $counterHistory = $this->reportModel->getCounterHistory($counterFilters);
-        $servicesReport = $this->reportModel->getServicesReport($startDate, $endDate);
-
-        // ¡CORREGIDO! La producción ahora se calcula para el mes seleccionado
+        
         $c454e_bn_prod = $this->reportModel->getProductionCountForPeriod(2, 'Impresion', 'blanco y negro', $startDate, $endDate) + $this->reportModel->getProductionCountForPeriod(2, 'Fotocopia', 'blanco y negro', $startDate, $endDate);
         $c454e_color_prod = $this->reportModel->getProductionCountForPeriod(2, 'Impresion', 'color', $startDate, $endDate) + $this->reportModel->getProductionCountForPeriod(2, 'Fotocopia', 'color', $startDate, $endDate);
         $bh227_total_prod = $this->reportModel->getProductionCountForPeriod(1, 'Impresion', 'blanco y negro', $startDate, $endDate) + $this->reportModel->getProductionCountForPeriod(1, 'Fotocopia', 'blanco y negro', $startDate, $endDate);
+
+        // Preparamos los datos para los gráficos
+        $chartLabels = [];
+        $chartData = [];
+        if (isset($statusCounts) && is_array($statusCounts)) {
+            foreach($statusCounts as $status) {
+                $chartLabels[] = $status['estado'];
+                $chartData[] = $status['total'];
+            }
+        }
 
         require_once '../views/layouts/header.php';
         require_once '../views/pages/reports/index.php';
@@ -55,25 +62,19 @@ class ReportController {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { exit('Acceso denegado'); }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->reportModel->saveCounter($_POST['maquina'], $_POST['fecha_inicio'], $_POST['fecha_fin'], $_POST['contador_bn'], $_POST['contador_color'] ?? 0, $_POST['notas'] ?? '');
+            $_SESSION['toast'] = ['message' => 'Contador registrado con éxito.', 'type' => 'success'];
         }
-        header('Location: /sistemagestion/reports'); exit();
+        header('Location: /sistemagestion/reports'); 
+        exit();
     }
 
     public function storeProviderPayment() {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { exit('Acceso denegado'); }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->reportModel->saveProviderPayment($_POST['fecha_pago'], $_POST['descripcion'], $_POST['monto']);
+            $_SESSION['toast'] = ['message' => 'Pago a proveedor registrado.', 'type' => 'success'];
         }
         header('Location: /sistemagestion/reports'); 
-        exit(); // --- LÍNEA AÑADIDA PARA MÁXIMA SEGURIDAD ---
-    }
-    
-    public function deleteProviderPayment($id) {
-        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->reportModel->deleteProviderPayment($id);
-        }
-        header('Location: /sistemagestion/reports');
         exit();
     }
     
@@ -81,6 +82,7 @@ class ReportController {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { exit(json_encode(['success' => false, 'message' => 'Acceso denegado'])); }
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['ids'])) {
             $success = $this->reportModel->deleteProviderPayments($_POST['ids']);
+            $_SESSION['toast'] = ['message' => 'Pagos eliminados.', 'type' => 'danger'];
             header('Content-Type: application/json');
             echo json_encode(['success' => $success]);
             exit();
@@ -93,6 +95,7 @@ class ReportController {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { exit(json_encode(['success' => false, 'message' => 'Acceso denegado'])); }
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['ids'])) {
             $success = $this->reportModel->deleteCounters($_POST['ids']);
+            $_SESSION['toast'] = ['message' => 'Registros de contador eliminados.', 'type' => 'danger'];
             header('Content-Type: application/json');
             echo json_encode(['success' => $success]);
             exit();
