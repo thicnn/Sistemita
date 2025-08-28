@@ -139,6 +139,11 @@
             opacity: 0;
             animation: slideInUp 0.6s ease-out forwards;
         }
+
+        /* --- REGLA AÑADIDA PARA CORREGIR LA ALINEACIÓN --- */
+        .client-card .list-group-item {
+            background-color: transparent !important;
+        }
     </style>
 </head>
 

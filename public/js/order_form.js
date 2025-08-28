@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // --- SELECCIÓN DE ELEMENTOS (sin cambios) ---
+    // --- ELEMENTOS DEL DOM ---
     const orderForm = document.getElementById('order-form');
     const addItemBtn = document.getElementById('add-item-btn');
     const itemsContainer = document.getElementById('items-container');
@@ -10,165 +10,156 @@ document.addEventListener('DOMContentLoaded', function () {
     const clientHiddenInput = document.getElementById('cliente_id');
     const searchResultsDiv = document.getElementById('search-results');
     
-    // Instancia del Dropdown de Bootstrap para control manual
     let searchDropdown = new bootstrap.Dropdown(clientSearchInput);
 
-    // --- LÓGICA DE BÚSQUEDA DE CLIENTES (COMPLETAMENTE RENOVADA) ---
+    // --- BÚSQUEDA DE CLIENTES (Funciona bien) ---
     clientSearchInput.addEventListener('keyup', async function () {
         const searchTerm = clientSearchInput.value.trim();
-        searchResultsDiv.innerHTML = ''; // Limpiamos resultados anteriores
-
+        searchResultsDiv.innerHTML = '';
         if (searchTerm.length < 2) {
-            clientHiddenInput.value = ''; // Limpiamos el ID si se borra la búsqueda
-            searchDropdown.hide(); // Ocultamos el dropdown si no hay búsqueda
+            clientHiddenInput.value = '';
+            searchDropdown.hide();
             validateForm();
             return;
         }
-
         try {
             const response = await fetch(`/sistemagestion/clients/search?term=${encodeURIComponent(searchTerm)}`);
             if (!response.ok) throw new Error('Network response was not ok');
-            
             const clients = await response.json();
-
             if (clients.length > 0) {
                 clients.forEach(client => {
-                    const resultItem = document.createElement('a');
-                    resultItem.classList.add('dropdown-item');
-                    resultItem.href = "#";
-                    // Creamos el HTML para cada resultado, mostrando nombre, teléfono y email
-                    resultItem.innerHTML = `
-                        <div class="client-name">${client.nombre}</div>
-                        <div class="client-contact">${client.telefono || ''} &middot; ${client.email || ''}</div>
-                    `;
-                    
-                    // Evento de clic para seleccionar un cliente
-                    resultItem.addEventListener('click', (e) => {
+                    const item = document.createElement('a');
+                    item.classList.add('dropdown-item');
+                    item.href = "#";
+                    item.innerHTML = `<div class="client-name">${client.nombre}</div><div class="client-contact">${client.telefono || ''} &middot; ${client.email || ''}</div>`;
+                    item.addEventListener('click', (e) => {
                         e.preventDefault();
                         clientHiddenInput.value = client.id;
                         clientSearchInput.value = client.nombre;
-                        searchDropdown.hide(); // Ocultamos el dropdown al seleccionar
+                        searchDropdown.hide();
                         validateForm();
                     });
-                    searchResultsDiv.appendChild(resultItem);
+                    searchResultsDiv.appendChild(item);
                 });
             } else {
                 searchResultsDiv.innerHTML = '<span class="dropdown-item-text text-muted">No se encontraron clientes</span>';
             }
-            searchDropdown.show(); // Mostramos el dropdown con los resultados
+            searchDropdown.show();
         } catch (error) {
-            console.error('Error fetching clients:', error);
+            console.error('Error al buscar clientes:', error);
             searchResultsDiv.innerHTML = '<span class="dropdown-item-text text-danger">Error al buscar</span>';
             searchDropdown.show();
         }
     });
 
-    // Ocultar resultados si se hace clic fuera del buscador
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.dropdown')) {
-            searchDropdown.hide();
-        }
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown')) searchDropdown.hide();
     });
 
+    // --- LÓGICA DE ÍTEMS DEL PEDIDO (AHORA SÍ) ---
 
-    // --- EL RESTO DEL CÓDIGO (VALIDACIÓN, CÁLCULOS, ETC.) SE MANTIENE IGUAL ---
-    
-    const validateForm = () => {
-        let isFormValid = true;
-        if (!clientHiddenInput.value) isFormValid = false;
-
-        const items = itemsContainer.querySelectorAll('.item-form');
-        if (items.length === 0) isFormValid = false;
-
-        items.forEach(item => {
-            const desc = item.querySelector('.descripcion').value;
-            const qty = parseInt(item.querySelector('.cantidad').value);
-            if (!desc || qty < 1) isFormValid = false;
-        });
-
-        submitButton.disabled = !isFormValid;
+    const populateSelect = (select, options) => {
+        select.innerHTML = '<option value="">Seleccionar...</option>';
+        options.forEach(opt => select.add(new Option(opt, opt)));
     };
+
+    itemsContainer.addEventListener('change', e => {
+        const target = e.target;
+        if (!target.classList.contains('item-selector')) return;
+
+        const itemForm = target.closest('.item-form');
+        const selects = {
+            tipo: itemForm.querySelector('.tipo'),
+            maquina: itemForm.querySelector('.maquina'),
+            categoria: itemForm.querySelector('.categoria'),
+            descripcion: itemForm.querySelector('.descripcion'),
+            cantidad: itemForm.querySelector('.cantidad'),
+            doble_faz: itemForm.querySelector('.doble_faz')
+        };
+        const groups = {
+            maquina: itemForm.querySelector('.maquina-group'),
+            categoria: itemForm.querySelector('.categoria-group')
+        };
+        
+        const tipoVal = selects.tipo.value;
+        const maquinaVal = selects.maquina.value;
+        const categoriaVal = selects.categoria.value;
+
+        // Lógica de reseteo y población en cascada
+        if (target.classList.contains('tipo')) {
+            const esServicio = tipoVal === 'Servicio';
+            groups.maquina.style.display = esServicio ? 'none' : 'block';
+            groups.categoria.style.display = esServicio ? 'none' : 'block';
+            
+            // Resetea todos los campos dependientes
+            ['maquina', 'categoria', 'descripcion'].forEach(name => {
+                selects[name].innerHTML = '';
+                selects[name].disabled = true;
+            });
+
+            if (esServicio) {
+                const descripciones = productsData.filter(p => p.tipo === 'Servicio').map(p => p.descripcion);
+                populateSelect(selects.descripcion, descripciones);
+                selects.descripcion.disabled = false;
+            } else if (tipoVal) {
+                const maquinas = [...new Set(productsData.filter(p => p.tipo === tipoVal).map(p => p.maquina_nombre))];
+                populateSelect(selects.maquina, maquinas);
+                selects.maquina.disabled = false;
+            }
+        } else if (target.classList.contains('maquina')) {
+            ['categoria', 'descripcion'].forEach(name => {
+                selects[name].innerHTML = '';
+                selects[name].disabled = true;
+            });
+            if (maquinaVal) {
+                const categorias = [...new Set(productsData.filter(p => p.tipo === tipoVal && p.maquina_nombre === maquinaVal).map(p => p.categoria))];
+                populateSelect(selects.categoria, categorias);
+                selects.categoria.disabled = false;
+            }
+        } else if (target.classList.contains('categoria')) {
+            selects.descripcion.innerHTML = '';
+            selects.descripcion.disabled = true;
+            if (categoriaVal) {
+                const descripciones = productsData.filter(p => p.tipo === tipoVal && p.maquina_nombre === maquinaVal && p.categoria === categoriaVal).map(p => p.descripcion);
+                populateSelect(selects.descripcion, descripciones);
+                selects.descripcion.disabled = false;
+            }
+        }
+        
+        // Habilitar campos finales
+        const descSelected = !!selects.descripcion.value;
+        selects.cantidad.disabled = !descSelected;
+        selects.doble_faz.disabled = !descSelected;
+
+        calculateTotals();
+        validateForm();
+    });
     
+    // --- FUNCIONES GENERALES (Cálculo, Validación, Añadir/Quitar) ---
+
     const calculateTotals = () => {
         let totalGeneral = 0;
         itemsContainer.querySelectorAll('.item-form').forEach(itemForm => {
-            const selectedDescripcion = itemForm.querySelector('.descripcion').value;
-            const cantidadCarillas = parseInt(itemForm.querySelector('.cantidad').value) || 0;
-            const product = productsData.find(p => p.descripcion === selectedDescripcion);
-            let subtotal = 0;
-            if (product && cantidadCarillas > 0) {
-                subtotal = product.precio * cantidadCarillas;
-            }
+            const desc = itemForm.querySelector('.descripcion').value;
+            const qty = parseInt(itemForm.querySelector('.cantidad').value) || 0;
+            const product = productsData.find(p => p.descripcion === desc);
+            const subtotal = (product && qty > 0) ? product.precio * qty : 0;
             itemForm.querySelector('.subtotal-item').textContent = subtotal.toFixed(2);
             totalGeneral += subtotal;
         });
         totalPedidoSpan.textContent = totalGeneral.toFixed(2);
     };
 
-    const populateSelect = (select, options, selectedValue = '') => {
-        const currentValue = select.value;
-        select.innerHTML = '<option value="">Seleccionar...</option>';
-        options.forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt;
-            option.textContent = opt;
-            select.appendChild(option);
+    const validateForm = () => {
+        let isValid = !!clientHiddenInput.value;
+        const items = itemsContainer.querySelectorAll('.item-form');
+        if (items.length === 0) isValid = false;
+        items.forEach(item => {
+            if (!item.querySelector('.descripcion').value || !(parseInt(item.querySelector('.cantidad').value) > 0)) {
+                isValid = false;
+            }
         });
-        select.value = options.includes(currentValue) ? currentValue : selectedValue;
-    };
-    
-    const updateItemState = (itemForm) => {
-        const selects = {
-            tipo: itemForm.querySelector('.tipo'),
-            maquina: itemForm.querySelector('.maquina'),
-            cat: itemForm.querySelector('.categoria'),
-            desc: itemForm.querySelector('.descripcion'),
-            qty: itemForm.querySelector('.cantidad'),
-            faz: itemForm.querySelector('.doble_faz')
-        };
-        const maquinaGroup = itemForm.querySelector('.maquina-group');
-
-        const values = {
-            tipo: selects.tipo.value,
-            maquina: selects.maquina.value,
-            cat: selects.cat.value
-        };
-
-        if (values.tipo && values.tipo !== 'Servicio') {
-            maquinaGroup.style.display = 'block';
-            selects.maquina.disabled = false;
-            const maquinas = [...new Set(productsData.filter(p => p.tipo === values.tipo).map(p => p.maquina_nombre))];
-            populateSelect(selects.maquina, maquinas, values.maquina);
-        } else {
-            maquinaGroup.style.display = 'none';
-            selects.maquina.disabled = true;
-            selects.maquina.value = '';
-        }
-
-        const canLoadCategories = values.tipo && (values.tipo === 'Servicio' || (values.tipo !== 'Servicio' && values.maquina));
-        selects.cat.disabled = !canLoadCategories;
-        if (canLoadCategories) {
-            const cats = [...new Set(productsData
-                .filter(p => p.tipo === values.tipo && (values.tipo === 'Servicio' || p.maquina_nombre === values.maquina))
-                .map(p => p.categoria))];
-            populateSelect(selects.cat, cats, values.cat);
-        }
-
-        const canLoadDescriptions = canLoadCategories && values.cat;
-        selects.desc.disabled = !canLoadDescriptions;
-        if (canLoadDescriptions) {
-            const descs = productsData
-                .filter(p => p.tipo === values.tipo && (values.tipo === 'Servicio' || p.maquina_nombre === values.maquina) && p.categoria === values.cat)
-                .map(p => p.descripcion);
-            populateSelect(selects.desc, descs);
-        }
-        
-        const allSelected = selects.desc.value;
-        selects.qty.disabled = !allSelected;
-        selects.faz.disabled = !allSelected;
-
-        calculateTotals();
-        validateForm();
+        submitButton.disabled = !isValid;
     };
 
     addItemBtn.addEventListener('click', () => {
@@ -179,46 +170,24 @@ document.addEventListener('DOMContentLoaded', function () {
         validateForm();
     });
 
-    itemsContainer.addEventListener('change', e => {
-        if (e.target.classList.contains('item-selector')) {
-            const itemForm = e.target.closest('.item-form');
-            if (e.target.classList.contains('tipo')) {
-                itemForm.querySelector('.maquina').value = '';
-                itemForm.querySelector('.categoria').value = '';
-                itemForm.querySelector('.descripcion').value = '';
-            }
-            if (e.target.classList.contains('maquina')) {
-                itemForm.querySelector('.categoria').value = '';
-                itemForm.querySelector('.descripcion').value = '';
-            }
-            if (e.target.classList.contains('categoria')) {
-                itemForm.querySelector('.descripcion').value = '';
-            }
-            updateItemState(itemForm);
-        }
-    });
-    
     itemsContainer.addEventListener('input', e => {
-         if (e.target.classList.contains('cantidad')) {
-            calculateTotals();
-        }
+        if (e.target.classList.contains('cantidad')) calculateTotals();
     });
 
     itemsContainer.addEventListener('click', e => {
-        if (e.target.classList.contains('remove-item-btn')) {
+        if (e.target.closest('.remove-item-btn')) {
             e.target.closest('.item-form').remove();
             calculateTotals();
             validateForm();
         }
     });
 
-    orderForm.addEventListener('change', validateForm);
     orderForm.addEventListener('submit', e => {
         if (submitButton.disabled) {
             e.preventDefault();
-            alert('Por favor, complete todos los campos requeridos para guardar el pedido.');
+            alert('Por favor, completa todos los campos requeridos.');
         }
     });
-
+    
     validateForm();
 });

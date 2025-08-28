@@ -43,7 +43,7 @@
         </div>
         <div class="card-body p-4">
             <div id="items-container">
-                </div>
+            </div>
             <div class="text-end mt-3 border-top pt-3">
                 <h4 class="mb-0">Costo Total del Pedido: $<span id="total-pedido" class="fw-bold">0.00</span></h4>
             </div>
@@ -58,13 +58,28 @@
 </form>
 
 <template id="item-template">
-    <div class="item-form border rounded p-3 mb-3 bg-light fade-in">
+    <div class="item-form border rounded p-3 mb-3 bg-body-tertiary fade-in">
         <div class="row align-items-end g-3">
-            <div class="col-lg-2 col-md-4"><label class="form-label">Tipo</label><select class="form-select item-selector tipo" name="items[tipo][]"></select></div>
-            <div class="col-lg-2 col-md-4 maquina-group" style="display: none;"><label class="form-label">Máquina</label><select class="form-select item-selector maquina" name="items[maquina][]" disabled></select></div>
-            <div class="col-lg-2 col-md-4"><label class="form-label">Categoría</label><select class="form-select item-selector categoria" name="items[categoria][]" disabled></select></div>
-            <div class="col-lg-3 col-md-6"><label class="form-label">Descripción</label><select class="form-select item-selector descripcion" name="items[descripcion][]" disabled></select></div>
-            <div class="col-lg-1 col-md-2"><label class="form-label">Cantidad</label><input type="number" class="form-control item-selector cantidad" name="items[cantidad][]" min="1" value="1" disabled></div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">Tipo</label>
+                <select class="form-select item-selector tipo" name="items[tipo][]"></select>
+            </div>
+            <div class="col-lg-2 col-md-4 maquina-group" style="display: none;">
+                <label class="form-label">Máquina</label>
+                <select class="form-select item-selector maquina" name="items[maquina][]" disabled></select>
+            </div>
+            <div class="col-lg-2 col-md-4 categoria-group" style="display: none;">
+                <label class="form-label">Categoría</label>
+                <select class="form-select item-selector categoria" name="items[categoria][]" disabled></select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label">Descripción</label>
+                <select class="form-select item-selector descripcion" name="items[descripcion][]" disabled></select>
+            </div>
+            <div class="col-lg-1 col-md-2">
+                <label class="form-label">Cantidad</label>
+                <input type="number" class="form-control item-selector cantidad" name="items[cantidad][]" min="1" value="1" disabled>
+            </div>
             <div class="col-lg-2 col-md-4 d-flex align-items-center pt-3">
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input item-selector doble_faz" name="items[doble_faz][]" value="1" disabled>
@@ -80,18 +95,21 @@
 </template>
 
 <style>
-/* Estilos para que el buscador de clientes se vea perfecto */
-#search-results .dropdown-item {
-    white-space: normal;
-    cursor: pointer;
-}
-#search-results .client-name {
-    font-weight: 500;
-}
-#search-results .client-contact {
-    font-size: 0.9em;
-    color: #6c757d;
-}
+    /* Estilos para que el buscador de clientes se vea perfecto */
+    #search-results .dropdown-item {
+        white-space: normal;
+        cursor: pointer;
+    }
+
+    #search-results .client-name {
+        font-weight: 500;
+    }
+
+    #search-results .client-contact {
+        font-size: 0.9em;
+        color: var(--bs-secondary-color);
+        /* <-- Cambio clave aquí */
+    }
 </style>
 
 <script src="/sistemagestion/public/js/order_form.js"></script>
