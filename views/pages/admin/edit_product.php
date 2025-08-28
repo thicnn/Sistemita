@@ -20,7 +20,7 @@
                             <input type="number" id="precio" name="precio" class="form-control" step="0.01" value="<?php echo htmlspecialchars($product['precio']); ?>" required>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Disponibilidad</label>
                         <div class="form-check form-switch p-3 border rounded bg-light">
@@ -45,37 +45,52 @@
 <style>
     /* Estilos para la animación */
     @keyframes slideInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .animated-card {
         opacity: 0;
         animation: slideInUp 0.6s ease-out forwards;
     }
+
+
+    .input-group-text {
+        background-color: var(--bs-tertiary-bg);
+        /* <-- ESTA ES LA SOLUCIÓN */
+        border-right: none;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const disponibleSwitch = document.getElementById('disponible');
-    const statusLabel = document.getElementById('availability-status');
+    document.addEventListener('DOMContentLoaded', function() {
+        const disponibleSwitch = document.getElementById('disponible');
+        const statusLabel = document.getElementById('availability-status');
 
-    disponibleSwitch.addEventListener('change', function() {
-        if (this.checked) {
-            statusLabel.textContent = 'Activo';
+        disponibleSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                statusLabel.textContent = 'Activo';
+                statusLabel.classList.add('text-success');
+                statusLabel.classList.remove('text-danger');
+            } else {
+                statusLabel.textContent = 'Inactivo';
+                statusLabel.classList.add('text-danger');
+                statusLabel.classList.remove('text-success');
+            }
+        });
+
+        // Añadir clase inicial al cargar la página
+        if (disponibleSwitch.checked) {
             statusLabel.classList.add('text-success');
-            statusLabel.classList.remove('text-danger');
         } else {
-            statusLabel.textContent = 'Inactivo';
             statusLabel.classList.add('text-danger');
-            statusLabel.classList.remove('text-success');
         }
     });
-
-    // Añadir clase inicial al cargar la página
-    if (disponibleSwitch.checked) {
-        statusLabel.classList.add('text-success');
-    } else {
-        statusLabel.classList.add('text-danger');
-    }
-});
 </script>

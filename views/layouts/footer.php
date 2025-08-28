@@ -1,20 +1,23 @@
 <?php if (isset($_SESSION['user_id'])): ?>
-    </div>
-    </main><?php endif; ?>
+    </div></main><?php endif; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    </div>
 
-<div class="modal fade" id="confirmModal" tabindex="-1">
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmar Acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">¿Estás seguro? Esta acción no se puede deshacer.</div>
+            <div class="modal-body">
+                ¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <form id="confirmForm" action="" method="POST">

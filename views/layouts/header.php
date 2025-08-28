@@ -12,13 +12,73 @@
             --nav-height: 70px;
         }
 
-        body {
-            background-color: #f4f6f9;
-        }
-
         body.logged-in {
             padding-top: var(--nav-height);
         }
+
+        /* --- ESTILOS GLOBALES DEFINITIVOS PARA MODO OSCURO --- */
+
+        /* 1. Fondos Generales */
+        body {
+            background-color: var(--bs-secondary-bg);
+        }
+
+        .content-area {
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            padding: 2.5rem;
+            border-radius: .5rem;
+        }
+
+        /* 2. Reglas específicas para cuando el modo oscuro está activo */
+        [data-bs-theme="dark"] {
+
+            /* Arregla cabeceras, pies y listas que se quedaban blancas */
+            .card-header,
+            .card-footer,
+            .list-group-item {
+                background-color: var(--bs-tertiary-bg) !important;
+            }
+
+            /* Arregla las tablas */
+            .table-light {
+                --bs-table-bg: var(--bs-tertiary-bg);
+            }
+
+            /* Arregla el avatar de clientes */
+            .avatar {
+                background-color: var(--bs-primary-bg-subtle);
+                color: var(--bs-primary-text-emphasis);
+            }
+
+            /* Arregla componentes personalizados */
+            .suggestion-card,
+            .report-card-small {
+                background-color: var(--bs-tertiary-bg);
+                border-color: var(--bs-border-color-translucent);
+            }
+        }
+
+        /* 3. Estilos base para los componentes (funcionan en ambos modos) */
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background-color: var(--bs-primary-bg-subtle);
+            color: var(--bs-primary-text-emphasis);
+        }
+
+        .input-group-text {
+            background-color: var(--bs-tertiary-bg);
+            border-right: none;
+        }
+
+        /* --- FIN DE ESTILOS GLOBALES --- */
 
         @keyframes slideDown {
             from {
@@ -34,13 +94,6 @@
 
         .navbar {
             animation: slideDown 0.5s ease-out;
-        }
-
-        .content-area {
-            background-color: #fff;
-            padding: 2.5rem;
-            border-radius: .5rem;
-            box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
         }
 
         .nav-link {

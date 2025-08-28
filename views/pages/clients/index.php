@@ -13,7 +13,7 @@
 </div>
 
 <?php if (empty($clients)): ?>
-    <div class="text-center p-5 bg-light rounded animated-card">
+    <div class="text-center p-5 bg-body-tertiary rounded animated-card">
         <p class="fs-4 text-muted">No se encontraron clientes.</p>
         <p>Intenta con otra búsqueda o crea un nuevo cliente para empezar.</p>
     </div>
@@ -29,73 +29,89 @@
                             </div>
                             <div>
                                 <h5 class="card-title mb-0">
-                                    <a href="/sistemagestion/clients/show/<?php echo $client['id']; ?>" class="stretched-link text-decoration-none text-dark">
+                                    <a href="/sistemagestion/clients/show/<?php echo $client['id']; ?>" class="stretched-link text-decoration-none text-body">
                                         <?php echo htmlspecialchars($client['nombre']); ?>
                                     </a>
                                 </h5>
-                                <small class="text-muted"><?php echo $client['total_pedidos'] ?? 0; ?> pedido(s)</small>
+                                <small class="text-body-secondary"><?php echo $client['total_pedidos'] ?? 0; ?> pedido(s)</small>
                             </div>
                         </div>
                         <div class="list-group list-group-flush">
                             <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <span><i class="bi bi-telephone-fill text-muted me-2"></i>Teléfono</span>
+                                <span><i class="bi bi-telephone-fill text-body-secondary me-2"></i>Teléfono</span>
                                 <span class="fw-light"><?php echo htmlspecialchars($client['telefono'] ?: 'N/A'); ?></span>
                             </div>
                             <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <span><i class="bi bi-envelope-fill text-muted me-2"></i>Email</span>
+                                <span><i class="bi bi-envelope-fill text-body-secondary me-2"></i>Email</span>
                                 <span class="fw-light"><?php echo htmlspecialchars($client['email'] ?: 'N/A'); ?></span>
                             </div>
                         </div>
                     </div>
                     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'administrador'): ?>
-                    <div class="card-footer bg-white border-0 pt-0 text-end">
-                        <a href="/sistemagestion/clients/edit/<?php echo $client['id']; ?>" class="btn btn-sm btn-outline-primary z-2 position-relative">Editar</a>
-                        <button type="button" class="btn btn-sm btn-outline-danger z-2 position-relative"
+                        <div class="card-footer pt-0 text-end">
+                            <a href="/sistemagestion/clients/edit/<?php echo $client['id']; ?>" class="btn btn-sm btn-outline-primary z-2 position-relative">Editar</a>
+                            <button type="button" class="btn btn-sm btn-outline-danger z-2 position-relative"
                                 data-bs-toggle="modal"
                                 data-bs-target="#confirmModal"
                                 data-action="/sistemagestion/clients/delete/<?php echo $client['id']; ?>">
-                            Eliminar
-                        </button>
-                    </div>
+                                Eliminar
+                            </button>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
 
-    <?php if ($totalPages > 1): ?>
-    <nav class="mt-4" aria-label="Paginación de clientes">
-        <ul class="pagination justify-content-center">
-            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                <a class="page-link" href="?page=<?php echo $page - 1; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page'=>''])); ?>">Anterior</a>
-            </li>
-
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                    <a class="page-link" href="?page=<?php echo $i; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page'=>''])); ?>">
-                        <?php echo $i; ?>
-                    </a>
+    <?php if (isset($totalPages) && $totalPages > 1): ?>
+        <nav class="mt-4" aria-label="Paginación de clientes">
+            <ul class="pagination justify-content-center">
+                <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo $page - 1; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page' => ''])); ?>">Anterior</a>
                 </li>
-            <?php endfor; ?>
 
-            <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
-                <a class="page-link" href="?page=<?php echo $page + 1; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page'=>''])); ?>">Siguiente</a>
-            </li>
-        </ul>
-    </nav>
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                        <a class="page-link" href="?page=<?php echo $i; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page' => ''])); ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    </li>
+                <?php endfor; ?>
+
+                <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo $page + 1; ?>&<?php echo http_build_query(array_diff_key($_GET, ['page' => ''])); ?>">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
     <?php endif; ?>
 <?php endif; ?>
 
 <style>
-    .client-card { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
-    .client-card:hover { transform: translateY(-5px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1) !important; }
-    .avatar {
-        width: 50px; height: 50px; border-radius: 50%;
-        background-color: var(--bs-primary-bg-subtle);
-        color: var(--bs-primary-text-emphasis);
-        display: flex; justify-content: center; align-items: center;
-        font-size: 1.5rem; font-weight: bold;
+    .client-card {
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        border-radius: 0.75rem;
+        /* <-- ESQUINAS REDONDEADAS */
+        border: 1px solid var(--bs-border-color);
     }
-    @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .animated-card { opacity: 0; animation: slideInUp 0.6s ease-out forwards; }
+
+    .client-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--bs-box-shadow-sm) !important;
+    }
+
+    .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .card-footer {
+        background: transparent;
+        border-top: 1px solid var(--bs-border-color-translucent);
+    }
 </style>

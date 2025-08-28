@@ -51,27 +51,45 @@
 
 <style>
     @keyframes slideInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .animated-card {
         opacity: 0;
         animation: slideInUp 0.6s ease-out forwards;
     }
+
     .input-group-text {
         background-color: #f8f9fa;
         border-right: none;
     }
+
     .form-control {
         border-left: none;
     }
+
     .form-control:focus {
         border-color: var(--bs-primary);
-        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb),.25);
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), .25);
         border-left: 1px solid var(--bs-primary);
     }
+
     .input-group:focus-within .input-group-text {
         border-color: var(--bs-primary);
         border-right: 1px solid var(--bs-primary);
+    }
+
+    .input-group-text {
+        background-color: var(--bs-tertiary-bg);
+        /* <-- ESTA ES LA SOLUCIÓN */
+        border-right: none;
     }
 </style>

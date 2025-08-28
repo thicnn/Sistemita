@@ -23,14 +23,14 @@
                             </div>
                         </div>
                         <div class="col-md-6 mb-3" id="campos-extra">
-                             <label for="categoria" class="form-label">Categoría</label>
-                             <div class="input-group">
+                            <label for="categoria" class="form-label">Categoría</label>
+                            <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-bookmark-fill"></i></span>
                                 <input type="text" id="categoria" name="categoria" class="form-control" placeholder="Ej: Blanco y Negro, Color">
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="descripcion" class="form-label">Descripción / Nombre</label>
                         <input type="text" id="descripcion" name="descripcion" class="form-control" required>
@@ -58,31 +58,46 @@
 <style>
     /* Estilos para la animación y el formulario */
     @keyframes slideInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .animated-card {
         opacity: 0;
         animation: slideInUp 0.6s ease-out forwards;
     }
+
+
+    .input-group-text {
+        background-color: var(--bs-tertiary-bg);
+        /* <-- ESTA ES LA SOLUCIÓN */
+        border-right: none;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const tipoSelect = document.getElementById('tipo-producto');
-    const camposExtra = document.getElementById('campos-extra');
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.getElementById('tipo-producto');
+        const camposExtra = document.getElementById('campos-extra');
 
-    function toggleCategoria() {
-        // Si se selecciona 'Servicio', se oculta el campo de categoría
-        if (tipoSelect.value === 'Servicio') {
-            camposExtra.style.display = 'none';
-        } else {
-            camposExtra.style.display = 'block';
+        function toggleCategoria() {
+            // Si se selecciona 'Servicio', se oculta el campo de categoría
+            if (tipoSelect.value === 'Servicio') {
+                camposExtra.style.display = 'none';
+            } else {
+                camposExtra.style.display = 'block';
+            }
         }
-    }
 
-    // Ejecutar la función al cargar la página y cada vez que cambie el selector
-    toggleCategoria();
-    tipoSelect.addEventListener('change', toggleCategoria);
-});
+        // Ejecutar la función al cargar la página y cada vez que cambie el selector
+        toggleCategoria();
+        tipoSelect.addEventListener('change', toggleCategoria);
+    });
 </script>

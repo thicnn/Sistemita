@@ -4,6 +4,7 @@ if (class_exists('IntlDateFormatter')) {
     $fmtMesAnio = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, null, null, 'MMMM \'de\' yyyy');
     $nombreMesSeleccionado = ucfirst($fmtMesAnio->format(strtotime($startDate)));
 } else {
+    // Alternativa por si la extensión intl no está disponible
     $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     $nombreMesSeleccionado = $meses[date('n', strtotime($startDate)) - 1] . ' de ' . date('Y', strtotime($startDate));
 }
@@ -174,23 +175,6 @@ if (class_exists('IntlDateFormatter')) {
 </div>
 
 <style>
-    @keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .animated-card {
-        opacity: 0;
-        animation: slideInUp 0.6s ease-out forwards;
-    }
-
     .report-card-small {
         display: flex;
         flex-direction: column;
@@ -207,6 +191,8 @@ if (class_exists('IntlDateFormatter')) {
     }
 
     .report-card-small:hover {
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
         transform: translateY(-5px);
         box-shadow: var(--bs-box-shadow-sm);
         border-color: var(--bs-primary);
@@ -215,21 +201,7 @@ if (class_exists('IntlDateFormatter')) {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Lógica JS para la página de reportes ---
-
-        // (Lógica para contadores y pagos: formularios, borrado, etc.)
-        document.getElementById('delete-selected-payments')?.addEventListener('click', async () => {
-            /* ... */ });
-        document.getElementById('delete-selected-counters')?.addEventListener('click', async () => {
-            /* ... */ });
-        document.getElementById('select-all-payments')?.addEventListener('change', e => {
-            /* ... */ });
-        document.getElementById('select-all-counters')?.addEventListener('change', e => {
-            /* ... */ });
-        document.getElementById('maquina-selector').addEventListener('change', function() {
-            /* ... */ }).dispatchEvent(new Event('change'));
-
-        // --- LÓGICA PARA EL GRÁFICO ---
+        // Lógica para el gráfico
         const ctx = document.getElementById('ordersChart');
         if (ctx) {
             const chartLabels = <?php echo json_encode($chartLabels ?? []); ?>;
@@ -247,7 +219,7 @@ if (class_exists('IntlDateFormatter')) {
                                 'rgba(25, 135, 84, 0.8)', 'rgba(220, 53, 69, 0.8)',
                                 'rgba(13, 202, 240, 0.8)', 'rgba(13, 110, 253, 0.8)'
                             ],
-                            borderColor: getComputedStyle(document.body).getPropertyValue('--bs-body-bg'),
+                            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bs-body-tertiary'),
                             borderWidth: 4,
                             hoverOffset: 10
                         }]
@@ -263,8 +235,59 @@ if (class_exists('IntlDateFormatter')) {
                     }
                 });
             } else {
-                ctx.getContext('2d').fillText("No hay datos para mostrar en el gráfico.", 10, 50);
+                const canvasCtx = ctx.getContext('2d');
+                canvasCtx.textAlign = 'center';
+                canvasCtx.textBaseline = 'middle';
+                canvasCtx.fillStyle = '#6c757d';
+                canvasCtx.fillText("No hay datos para mostrar en el gráfico.", ctx.width / 2, ctx.height / 2);
             }
         }
+
+        // Lógica para formularios y borrado
+        document.getElementById('delete-selected-payments')?.addEventListener('click', async () => {
+            const selectedIds = Array.from(document.querySelectorAll('.payment-checkbox:checked')).map(cb => cb.value);
+            if (selectedIds.length > 0 && confirm(`¿Seguro que quieres eliminar ${selectedIds.length} pago(s)?`)) {
+                await fetch('/sistemagestion/reports/delete_payments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `ids[]=${selectedIds.join('&ids[]=')}`
+                });
+                location.reload();
+            }
+        });
+
+        document.getElementById('delete-selected-counters')?.addEventListener('click', async () => {
+            const selectedIds = Array.from(document.querySelectorAll('.counter-checkbox:checked')).map(cb => cb.value);
+            if (selectedIds.length > 0 && confirm(`¿Seguro que quieres eliminar ${selectedIds.length} registro(s)?`)) {
+                await fetch('/sistemagestion/reports/delete_counters', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `ids[]=${selectedIds.join('&ids[]=')}`
+                });
+                location.reload();
+            }
+        });
+
+        document.getElementById('select-all-payments')?.addEventListener('change', e => {
+            document.querySelectorAll('.payment-checkbox').forEach(cb => cb.checked = e.target.checked);
+        });
+
+        document.getElementById('select-all-counters')?.addEventListener('change', e => {
+            document.querySelectorAll('.counter-checkbox').forEach(cb => cb.checked = e.target.checked);
+        });
+
+        document.getElementById('maquina-selector').addEventListener('change', function() {
+            const colorInput = document.getElementById('contador-color');
+            if (this.value === 'Bh-227') {
+                colorInput.style.display = 'none';
+                colorInput.value = '';
+            } else {
+                colorInput.style.display = 'block';
+            }
+        }).dispatchEvent(new Event('change'));
     });
 </script>

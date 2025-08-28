@@ -1,6 +1,7 @@
 <?php
 // Función auxiliar para los badges
-function getStatusBadgeClass($status) {
+function getStatusBadgeClass($status)
+{
     $map = [
         'Entregado' => 'bg-success-subtle text-success-emphasis border border-success-subtle',
         'Listo para Retirar' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
@@ -77,7 +78,7 @@ function getStatusBadgeClass($status) {
         </div>
 
         <div class="card shadow-sm mt-4 animated-card" style="animation-delay: 0.3s;">
-            <div class="card-header bg-white border-0">
+            <div class="card-header border-0">
                 <h5 class="mb-0">Últimos Pedidos</h5>
             </div>
             <div class="card-body p-0">
@@ -85,7 +86,9 @@ function getStatusBadgeClass($status) {
                     <table class="table table-hover mb-0">
                         <tbody>
                             <?php if (empty($recentOrders)): ?>
-                                <tr><td class="text-center p-3 text-muted">No hay pedidos recientes.</td></tr>
+                                <tr>
+                                    <td class="text-center p-3 text-muted">No hay pedidos recientes.</td>
+                                </tr>
                             <?php else: ?>
                                 <?php foreach ($recentOrders as $order): ?>
                                     <tr>
@@ -106,7 +109,7 @@ function getStatusBadgeClass($status) {
 
     <div class="col-lg-4">
         <div class="card shadow-sm mb-4 animated-card" style="animation-delay: 0.4s;">
-             <div class="card-header bg-white border-0">
+            <div class="card-header border-0">
                 <h5 class="mb-0">Acciones Rápidas</h5>
             </div>
             <div class="card-body d-grid gap-2">
@@ -116,7 +119,7 @@ function getStatusBadgeClass($status) {
         </div>
 
         <div class="card shadow-sm mb-4 animated-card" style="animation-delay: 0.5s;">
-            <div class="card-header bg-white border-0">
+            <div class="card-header border-0">
                 <h5 class="mb-0">Cola de Producción</h5>
             </div>
             <div class="card-body">
@@ -135,14 +138,14 @@ function getStatusBadgeClass($status) {
         </div>
 
         <div class="card shadow-sm animated-card" style="animation-delay: 0.6s;">
-            <div class="card-header bg-white border-0">
+            <div class="card-header border-0">
                 <h5 class="mb-0">Top 5 Clientes (3 Meses)</h5>
             </div>
             <ul class="list-group list-group-flush">
                 <?php if (empty($topClients)): ?>
                     <li class="list-group-item">No hay datos suficientes.</li>
                 <?php else: ?>
-                    <?php foreach($topClients as $client): ?>
+                    <?php foreach ($topClients as $client): ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <?php echo htmlspecialchars($client['nombre']); ?>
                             <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">
@@ -159,46 +162,79 @@ function getStatusBadgeClass($status) {
 <style>
     /* Animación de despliegue */
     @keyframes slideInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .animated-card {
         opacity: 0;
         animation: slideInUp 0.6s ease-out forwards;
     }
-    
+
     /* Tarjetas de sugerencias */
     .suggestion-card {
-        display: flex; align-items: center; gap: 1rem;
-        padding: 1rem; background-color: #f8f9fa;
-        border: 1px solid #e9ecef; border-radius: 0.5rem;
-        text-decoration: none; color: inherit;
-        transition: all 0.2s ease-in-out; height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid transparent;
+        /* Borde transparente por defecto */
+        border-radius: 0.5rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease-in-out;
+        height: 100%;
     }
+
     .suggestion-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1);
+        box-shadow: var(--bs-box-shadow-sm);
         border-color: var(--bs-primary);
     }
-    .suggestion-card strong { display: block; margin-bottom: 0.25rem; }
-    .suggestion-card p { font-size: 0.9em; color: var(--bs-secondary-color); margin: 0; }
-    .card-header.bg-white { background-color: #fff !important; }
-    .fw-medium { font-weight: 500 !important; }
+
+    .suggestion-card strong {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .suggestion-card p {
+        font-size: 0.9em;
+        color: var(--bs-secondary-color);
+        margin: 0;
+    }
+
+    .fw-medium {
+        font-weight: 500 !important;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Reloj
-    const timeElement = document.getElementById('time');
-    const dateElement = document.getElementById('date');
-    
-    function updateClock() {
-        const now = new Date();
-        timeElement.textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        dateElement.textContent = now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Reloj
+        const timeElement = document.getElementById('time');
+        const dateElement = document.getElementById('date');
 
-    updateClock();
-    setInterval(updateClock, 1000);
-});
+        function updateClock() {
+            const now = new Date();
+            timeElement.textContent = now.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            dateElement.textContent = now.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+            });
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+    });
 </script>
