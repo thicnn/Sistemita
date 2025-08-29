@@ -30,6 +30,9 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
     ($method === 'POST') ? $clientController->update((int)$matches[1]) : $clientController->showEditForm((int)$matches[1]);
 } elseif (preg_match('#^clients/delete/(\d+)$#', $url, $matches)) {
     if ($method === 'POST') $clientController->delete((int)$matches[1]);
+} elseif (preg_match('#^clients/check_discount/(\d+)$#', $url, $matches)) {
+    $clientController->checkDiscountEligibility((int)$matches[1]);
+
 } elseif (preg_match('#^orders/show/(\d+)$#', $url, $matches)) {
     $orderController->show((int)$matches[1]);
 } elseif (preg_match('#^orders/add_payment/(\d+)$#', $url, $matches)) {
@@ -48,31 +51,66 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
     // Si no es una ruta dinámica, usamos el switch para las rutas estáticas
     switch ($url) {
         // Autenticación y Dashboard
-        case 'login': ($method === 'POST') ? $authController->handleLogin() : $authController->showLoginForm(); break;
-        case 'logout': $authController->logout(); break;
-        case 'dashboard': case '': $authController->showDashboard(); break;
-        
+        case 'login':
+            ($method === 'POST') ? $authController->handleLogin() : $authController->showLoginForm();
+            break;
+        case 'logout':
+            $authController->logout();
+            break;
+        case 'dashboard':
+        case '':
+            $authController->showDashboard();
+            break;
+
         // Clientes
-        case 'clients': $clientController->index(); break;
-        case 'clients/create': ($method === 'POST') ? $clientController->store() : $clientController->showCreateForm(); break;
-        case 'clients/search': $clientController->search(); break;
-        
+        case 'clients':
+            $clientController->index();
+            break;
+        case 'clients/create':
+            ($method === 'POST') ? $clientController->store() : $clientController->showCreateForm();
+            break;
+        case 'clients/search':
+            $clientController->search();
+            break;
+
         // Pedidos
-        case 'orders': $orderController->index(); break;
-        case 'orders/create': ($method === 'POST') ? $orderController->store() : $orderController->showCreateForm(); break;
+        case 'orders':
+            $orderController->index();
+            break;
+        case 'orders/create':
+            ($method === 'POST') ? $orderController->store() : $orderController->showCreateForm();
+            break;
 
         // Reportes
-        case 'reports': $reportController->index(); break;
-        case 'reports/store_counter': if ($method === 'POST') $reportController->storeCounter(); break;
-        case 'reports/store_provider_payment': if ($method === 'POST') $reportController->storeProviderPayment(); break;
-        case 'reports/delete_payments': if ($method === 'POST') $reportController->deletePayments(); break;
-        case 'reports/delete_counters': if ($method === 'POST') $reportController->deleteCounters(); break;
+        case 'reports':
+            $reportController->index();
+            break;
+        case 'reports/store_counter':
+            if ($method === 'POST') $reportController->storeCounter();
+            break;
+        case 'reports/store_provider_payment':
+            if ($method === 'POST') $reportController->storeProviderPayment();
+            break;
+        case 'reports/delete_payments':
+            if ($method === 'POST') $reportController->deletePayments();
+            break;
+        case 'reports/delete_counters':
+            if ($method === 'POST') $reportController->deleteCounters();
+            break;
 
         // Administración
-        case 'admin/settings': $adminController->settings(); break;
-        case 'admin/settings/store': if ($method === 'POST') $adminController->storeSetting(); break;
-        case 'admin/products': $adminController->listProducts(); break;
-        case 'admin/products/create': ($method === 'POST') ? $adminController->storeProduct() : $adminController->showProductCreateForm(); break;
+        case 'admin/settings':
+            $adminController->settings();
+            break;
+        case 'admin/settings/store':
+            if ($method === 'POST') $adminController->storeSetting();
+            break;
+        case 'admin/products':
+            $adminController->listProducts();
+            break;
+        case 'admin/products/create':
+            ($method === 'POST') ? $adminController->storeProduct() : $adminController->showProductCreateForm();
+            break;
 
         default:
             header("HTTP/1.0 404 Not Found");

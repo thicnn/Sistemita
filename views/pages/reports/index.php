@@ -1,13 +1,23 @@
 <?php
-// --- Lógica de Fechas y Nombres ---
-if (class_exists('IntlDateFormatter')) {
-    $fmtMesAnio = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, null, null, 'MMMM \'de\' yyyy');
-    $nombreMesSeleccionado = ucfirst($fmtMesAnio->format(strtotime($startDate)));
-} else {
-    // Alternativa por si la extensión intl no está disponible
-    $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    $nombreMesSeleccionado = $meses[date('n', strtotime($startDate)) - 1] . ' de ' . date('Y', strtotime($startDate));
-}
+// --- Lógica de Fechas y Nombres (VERSIÓN CORREGIDA Y SIMPLIFICADA) ---
+// Este código no depende de ninguna extensión y funcionará siempre.
+$mesesEnEspanol = [
+    '01' => 'Enero',
+    '02' => 'Febrero',
+    '03' => 'Marzo',
+    '04' => 'Abril',
+    '05' => 'Mayo',
+    '06' => 'Junio',
+    '07' => 'Julio',
+    '08' => 'Agosto',
+    '09' => 'Septiembre',
+    '10' => 'Octubre',
+    '11' => 'Noviembre',
+    '12' => 'Diciembre'
+];
+$numeroMes = date('m', strtotime($startDate));
+$anio = date('Y', strtotime($startDate));
+$nombreMesSeleccionado = $mesesEnEspanol[$numeroMes] . ' de ' . $anio;
 ?>
 
 <h2 class="mb-4">Panel de Reportes</h2>
@@ -23,36 +33,56 @@ if (class_exists('IntlDateFormatter')) {
 </div>
 
 <div class="row g-4 mb-4">
-    <div class="col-lg-7">
-        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.1s;">
+    <div class="col-12">
+        <div class="card shadow-sm animated-card" style="animation-delay: 0.1s;">
             <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumen de Pedidos de <?php echo $nombreMesSeleccionado; ?></h5>
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Evolución de Ventas (Últimos 6 Meses)</h5>
             </div>
             <div class="card-body">
-                <div class="row g-3">
-                    <?php
-                    $status_totals = [];
-                    if (isset($statusCounts) && is_array($statusCounts)) {
-                        foreach ($statusCounts as $status) {
-                            $status_totals[$status['estado']] = $status['total'];
-                        }
-                    }
-                    $all_statuses = ["Entregado", "Cancelado", "Listo para Retirar", "En Curso"];
-                    foreach ($all_statuses as $s): $total = $status_totals[$s] ?? 0;
-                    ?>
-                        <div class="col-md-6">
-                            <a href="/sistemagestion/reports/status/<?php echo urlencode($s); ?>" class="report-card-small h-100">
-                                <span class="fs-2 fw-bold text-primary"><?php echo $total; ?></span>
-                                <span class="text-muted"><?php echo $s; ?></span>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
+                <canvas id="salesOverTimeChart" style="min-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.2s;">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-tags-fill me-2"></i>Top 10 Productos Más Rentables de <?php echo $nombreMesSeleccionado; ?></h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Unidades</th>
+                                <th class="text-end">Ingresos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($topProducts)): ?>
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted p-4">No hay datos de ventas para este mes.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($topProducts as $product): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($product['descripcion']); ?></td>
+                                        <td class="text-center"><?php echo $product['unidades_vendidas']; ?></td>
+                                        <td class="text-end fw-bold">$<?php echo number_format($product['ingresos_generados'], 2); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-lg-5">
-        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.2s;">
+        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.3s;">
             <div class="card-header bg-white">
                 <h5 class="mb-0"><i class="bi bi-pie-chart-fill me-2"></i>Distribución de Estados</h5>
             </div>
@@ -67,7 +97,7 @@ if (class_exists('IntlDateFormatter')) {
 
 <div class="row g-4">
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.3s;">
+        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.4s;">
             <div class="card-header bg-white">
                 <h5 class="mb-0"><i class="bi bi-calculator-fill me-2"></i>Gestión de Contadores</h5>
             </div>
@@ -124,7 +154,7 @@ if (class_exists('IntlDateFormatter')) {
     </div>
 
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.4s;">
+        <div class="card shadow-sm h-100 animated-card" style="animation-delay: 0.5s;">
             <div class="card-header bg-white">
                 <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Pagos a Proveedor</h5>
             </div>
@@ -201,7 +231,7 @@ if (class_exists('IntlDateFormatter')) {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Lógica para el gráfico
+        // Lógica para el gráfico de dona (Estados)
         const ctx = document.getElementById('ordersChart');
         if (ctx) {
             const chartLabels = <?php echo json_encode($chartLabels ?? []); ?>;
@@ -241,6 +271,71 @@ if (class_exists('IntlDateFormatter')) {
                 canvasCtx.fillStyle = '#6c757d';
                 canvasCtx.fillText("No hay datos para mostrar en el gráfico.", ctx.width / 2, ctx.height / 2);
             }
+        }
+
+        // --- LÓGICA PARA EL NUEVO GRÁFICO DE LÍNEAS (VENTAS) ---
+        const salesCtx = document.getElementById('salesOverTimeChart');
+        if (salesCtx) {
+            const salesData = <?php echo json_encode($salesOverTime ?? []); ?>;
+            const salesLabels = salesData.map(d => {
+                const date = new Date(d.mes + '-02'); // Use second day to avoid timezone issues
+                return date.toLocaleString('es-ES', {
+                    month: 'long',
+                    year: 'numeric'
+                });
+            });
+            const salesValues = salesData.map(d => d.total_ventas);
+            const ordersValues = salesData.map(d => d.total_pedidos);
+
+            new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: salesLabels,
+                    datasets: [{
+                        label: 'Ingresos Mensuales',
+                        data: salesValues,
+                        backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Pedidos Mensuales',
+                        data: ordersValues,
+                        backgroundColor: 'rgba(25, 135, 84, 0.6)',
+                        borderColor: 'rgba(25, 135, 84, 1)',
+                        borderWidth: 2,
+                        type: 'line',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Ingresos ($)'
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Pedidos'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         // Lógica para formularios y borrado

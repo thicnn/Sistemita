@@ -5,19 +5,45 @@ class Order
     private $connection;
     private $table_name = "pedidos";
     private $items_table_name = "items_pedido";
+    private $history_table_name = "pedidos_historial";
 
     public function __construct($db_connection)
     {
         $this->connection = $db_connection;
     }
 
-    // --- NUEVO MÉTODO PARA CONTAR (CORREGIDO) ---
-    public function countAllWithFilters($filters) {
+    public function addHistory($pedido_id, $usuario_id, $descripcion)
+    {
+        $query = "INSERT INTO " . $this->history_table_name . " (pedido_id, usuario_id, descripcion) VALUES (?, ?, ?)";
+        $stmt = $this->connection->prepare($query);
+        $uid = $usuario_id ?: null;
+        $stmt->bind_param("iis", $pedido_id, $uid, $descripcion);
+        return $stmt->execute();
+    }
+
+    public function getHistoryByOrderId($pedido_id)
+    {
+        $query = "SELECT h.descripcion, h.fecha, u.nombre as nombre_usuario
+                  FROM " . $this->history_table_name . " h
+                  LEFT JOIN usuarios u ON h.usuario_id = u.id
+                  WHERE h.pedido_id = ?
+                  ORDER BY h.fecha DESC";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("i", $pedido_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function countAllWithFilters($filters)
+    {
         $query = "SELECT COUNT(DISTINCT p.id) as total 
                   FROM " . $this->table_name . " p
                   LEFT JOIN clientes c ON p.cliente_id = c.id";
-        
-        $where = []; $params = []; $types = '';
+
+        $where = [];
+        $params = [];
+        $types = '';
 
         if (!empty($filters['search'])) {
             $where[] = "(c.nombre LIKE ? OR p.id LIKE ?)";
@@ -41,8 +67,10 @@ class Order
             $types .= 's';
         }
 
-        if (!empty($where)) { $query .= " WHERE " . implode(' AND ', $where); }
-        
+        if (!empty($where)) {
+            $query .= " WHERE " . implode(' AND ', $where);
+        }
+
         $stmt = $this->connection->prepare($query);
         if (!empty($params)) {
             $stmt->bind_param($types, ...$params);
@@ -52,13 +80,14 @@ class Order
         return $result['total'] ?? 0;
     }
 
-    // --- MÉTODO PRINCIPAL DE BÚSQUEDA (CORREGIDO) ---
     public function findAllWithFilters($filters, $limit, $offset)
     {
         $query = "SELECT p.id, p.estado, p.costo_total, p.fecha_creacion, c.nombre as nombre_cliente 
                   FROM " . $this->table_name . " p
                   LEFT JOIN clientes c ON p.cliente_id = c.id";
-        $where = []; $params = []; $types = '';
+        $where = [];
+        $params = [];
+        $types = '';
 
         if (!empty($filters['search'])) {
             $where[] = "(c.nombre LIKE ? OR p.id LIKE ?)";
@@ -82,39 +111,39 @@ class Order
             $types .= 's';
         }
 
-        if (!empty($where)) { $query .= " WHERE " . implode(' AND ', $where); }
+        if (!empty($where)) {
+            $query .= " WHERE " . implode(' AND ', $where);
+        }
 
-        $orderBy = 'p.fecha_creacion'; 
+        $orderBy = 'p.fecha_creacion';
         $orderDir = 'DESC';
         $allowedSorts = ['id', 'nombre_cliente', 'estado', 'costo_total', 'fecha_creacion'];
         if (!empty($filters['sort']) && in_array($filters['sort'], $allowedSorts)) {
             $orderBy = 'p.' . $filters['sort'];
-            if ($filters['sort'] === 'nombre_cliente') { $orderBy = 'c.nombre'; }
+            if ($filters['sort'] === 'nombre_cliente') {
+                $orderBy = 'c.nombre';
+            }
         }
         if (!empty($filters['dir']) && in_array(strtoupper($filters['dir']), ['ASC', 'DESC'])) {
             $orderDir = strtoupper($filters['dir']);
         }
 
         $query .= " ORDER BY $orderBy $orderDir LIMIT ? OFFSET ?";
-        
+
         $params[] = $limit;
         $params[] = $offset;
         $types .= 'ii';
 
         $stmt = $this->connection->prepare($query);
-        
-        if (!empty($params)) { 
-            // Usamos el operador "splat" que es más moderno y seguro
-            $stmt->bind_param($types, ...$params); 
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
         }
-        
+
         $stmt->execute();
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
-
-    // --- EL RESTO DE MÉTODOS SE MANTIENEN IGUAL ---
-
     public function findTodaysOrders()
     {
         $hoy = date('Y-m-d');
@@ -129,7 +158,7 @@ class Order
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
-    
+
     public function getDashboardStats()
     {
         $query = "
@@ -159,7 +188,7 @@ class Order
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
-    
+
     public function findByStatuses($statuses)
     {
         $placeholders = implode(',', array_fill(0, count($statuses), '?'));
@@ -208,7 +237,8 @@ class Order
         return $stmt->execute();
     }
 
-    public function settlePayment($pedido_id) {
+    public function settlePayment($pedido_id)
+    {
         $order = $this->findByIdWithDetails($pedido_id);
         if (!$order) return false;
         $totalPagado = array_sum(array_column($order['pagos'], 'monto'));
@@ -219,8 +249,11 @@ class Order
         return true;
     }
 
-    public function update($id, $estado, $notas, $motivo_cancelacion, $es_interno) {
-        if ($motivo_cancelacion !== null) { $estado = 'Cancelado'; }
+    public function update($id, $estado, $notas, $motivo_cancelacion, $es_interno)
+    {
+        if ($motivo_cancelacion !== null) {
+            $estado = 'Cancelado';
+        }
         $query = "UPDATE " . $this->table_name . " SET estado = ?, notas_internas = ?, motivo_cancelacion = ?, es_interno = ? WHERE id = ?";
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("sssii", $estado, $notas, $motivo_cancelacion, $es_interno, $id);
@@ -234,7 +267,7 @@ class Order
             $costo_total_seguro = 0;
             $query_producto = "SELECT precio FROM productos WHERE descripcion = ? LIMIT 1";
             $stmt_producto = $this->connection->prepare($query_producto);
-    
+
             foreach ($items['descripcion'] as $index => $descripcion) {
                 $cantidad = (int)$items['cantidad'][$index];
                 if (!empty($descripcion) && $cantidad > 0) {
@@ -246,14 +279,16 @@ class Order
                     }
                 }
             }
-    
+
             $query_pedido = "INSERT INTO " . $this->table_name . " (cliente_id, usuario_id, estado, notas_internas, costo_total, es_interno) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt_pedido = $this->connection->prepare($query_pedido);
             $stmt_pedido->bind_param("iisidi", $cliente_id, $usuario_id, $estado, $notas, $costo_total_seguro, $es_interno);
             $stmt_pedido->execute();
-    
+
             $pedido_id = $this->connection->insert_id;
-    
+
+            $this->addHistory($pedido_id, $usuario_id, "Creó el pedido.");
+
             $query_item = "INSERT INTO " . $this->items_table_name . " (pedido_id, tipo, categoria, descripcion, cantidad, subtotal, doble_faz) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt_item = $this->connection->prepare($query_item);
 
@@ -264,7 +299,7 @@ class Order
                     $stmt_producto->execute();
                     $resultado = $stmt_producto->get_result()->fetch_assoc();
                     $subtotal_item = $resultado['precio'] * $cantidad;
-                    
+
                     $tipo_item = $items['tipo'][$index];
                     $categoria = $items['categoria'][$index];
                     $doble_faz = isset($items['doble_faz'][$index]) ? 1 : 0;
@@ -273,16 +308,15 @@ class Order
                     $stmt_item->execute();
                 }
             }
-            
+
             $this->connection->commit();
             return true;
         } catch (Exception $e) {
             $this->connection->rollback();
-            error_log("Error al crear pedido: " . $e->getMessage()); 
+            error_log("Error al crear pedido: " . $e->getMessage());
             return false;
         }
     }
-
     public function getSalesReport($fechaInicio, $fechaFin)
     {
         $fechaFinCompleta = $fechaFin . ' 23:59:59';
@@ -295,8 +329,9 @@ class Order
         $result = $stmt->get_result();
         return $result ? $result->fetch_assoc() : ['total_ventas' => 0, 'cantidad_pedidos' => 0];
     }
-    
-    public function findByStatus($status) {
+
+    public function findByStatus($status)
+    {
         $query = "SELECT p.*, c.nombre as nombre_cliente FROM pedidos p LEFT JOIN clientes c ON p.cliente_id = c.id WHERE p.estado = ? ORDER BY p.fecha_creacion DESC";
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("s", $status);
@@ -305,7 +340,8 @@ class Order
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    public function getMonthlySalesComparison($mes1, $mes2) {
+    public function getMonthlySalesComparison($mes1, $mes2)
+    {
         $query = "SELECT DATE_FORMAT(fecha_creacion, '%Y-%m') as mes, COUNT(id) as total_pedidos 
                   FROM pedidos 
                   WHERE estado = 'Entregado' AND es_interno = 0 AND (DATE_FORMAT(fecha_creacion, '%Y-%m') = ? OR DATE_FORMAT(fecha_creacion, '%Y-%m') = ?)
@@ -317,7 +353,8 @@ class Order
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    public function findByClientId($clientId) {
+    public function findByClientId($clientId)
+    {
         $query = "SELECT * FROM " . $this->table_name . " WHERE cliente_id = ? ORDER BY fecha_creacion DESC";
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("i", $clientId);
@@ -326,7 +363,8 @@ class Order
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    public function deleteAll() {
+    public function deleteAll()
+    {
         $this->connection->query("SET FOREIGN_KEY_CHECKS=0;");
         $this->connection->query("TRUNCATE TABLE `pagos`;");
         $this->connection->query("TRUNCATE TABLE `items_pedido`;");

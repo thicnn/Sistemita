@@ -1,6 +1,7 @@
 <h2 class="mb-4">Crear Nuevo Pedido</h2>
 
 <script>
+    // Codifica los datos de los productos para que estén disponibles en JavaScript
     const productsData = <?php echo json_encode($products); ?>;
 </script>
 
@@ -10,16 +11,17 @@
             <h5 class="mb-0"><i class="bi bi-person-check-fill me-2"></i>1. Datos Principales</h5>
         </div>
         <div class="card-body p-4">
-            <div class="row">
-                <div class="col-md-6 mb-3">
+            <div class="row g-3">
+                <div class="col-md-6">
                     <label for="cliente_search" class="form-label">Buscar y Asociar Cliente</label>
                     <div class="dropdown">
                         <input type="text" id="cliente_search" class="form-control dropdown-toggle" placeholder="Buscar por Nombre, Teléfono o Email..." data-bs-toggle="dropdown" autocomplete="off">
                         <input type="hidden" name="cliente_id" id="cliente_id">
                         <div id="search-results" class="dropdown-menu w-100"></div>
                     </div>
+                    <div id="discount-alert-container" class="mt-2"></div>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label for="estado" class="form-label">Estado Inicial del Pedido</label>
                     <select name="estado" id="estado" class="form-select" required>
                         <option value="Solicitud" selected>Solicitud</option>
@@ -29,6 +31,16 @@
                 <div class="col-12">
                     <label for="notas" class="form-label">Notas del Pedido (Opcional)</label>
                     <textarea name="notas" id="notas" rows="2" class="form-control"></textarea>
+                </div>
+                <div class="col-12 mt-2">
+                    <div class="form-check form-switch d-inline-block me-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="es_interno" name="es_interno" value="1">
+                        <label class="form-check-label" for="es_interno">Marcar como Uso Interno</label>
+                    </div>
+                    <div class="form-check form-switch d-inline-block">
+                        <input class="form-check-input" type="checkbox" role="switch" id="es_error" name="es_error" value="1">
+                        <label class="form-check-label" for="es_error">Marcar como Error</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -45,6 +57,17 @@
             <div id="items-container">
             </div>
             <div class="text-end mt-3 border-top pt-3">
+                <div class="row justify-content-end align-items-center g-3 mb-3">
+                    <div class="col-auto">
+                        <label for="descuento-total" class="col-form-label fs-5">Descuento Total (%):</label>
+                    </div>
+                    <div class="col-auto" style="max-width: 150px;">
+                        <div class="input-group">
+                            <input type="number" id="descuento-total" name="descuento_total" class="form-control" value="0" min="0" max="100" step="1">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
                 <h4 class="mb-0">Costo Total del Pedido: $<span id="total-pedido" class="fw-bold">0.00</span></h4>
             </div>
         </div>
@@ -80,6 +103,13 @@
                 <label class="form-label">Cantidad</label>
                 <input type="number" class="form-control item-selector cantidad" name="items[cantidad][]" min="1" value="1" disabled>
             </div>
+            <div class="col-lg-2 col-md-3">
+                <label class="form-label">Desc. (%)</label>
+                <div class="input-group">
+                    <input type="number" class="form-control item-selector descuento-item" name="items[descuento][]" min="0" max="100" value="0" step="1" disabled>
+                    <span class="input-group-text">%</span>
+                </div>
+            </div>
             <div class="col-lg-2 col-md-4 d-flex align-items-center pt-3">
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input item-selector doble_faz" name="items[doble_faz][]" value="1" disabled>
@@ -95,7 +125,6 @@
 </template>
 
 <style>
-    /* Estilos para que el buscador de clientes se vea perfecto */
     #search-results .dropdown-item {
         white-space: normal;
         cursor: pointer;
@@ -108,7 +137,6 @@
     #search-results .client-contact {
         font-size: 0.9em;
         color: var(--bs-secondary-color);
-        /* <-- Cambio clave aquí */
     }
 </style>
 

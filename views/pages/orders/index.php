@@ -1,6 +1,7 @@
 <?php
 // Función para generar badges de estado con colores sutiles
-function getStatusBadgeClass($status) {
+function getStatusBadgeClass($status)
+{
     $map = [
         'Entregado' => 'bg-success-subtle text-success-emphasis border border-success-subtle',
         'Listo para Retirar' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
@@ -8,13 +9,16 @@ function getStatusBadgeClass($status) {
         'Confirmado' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
         'Cancelado' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
         'Solicitud' => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle',
-        'Cotización' => 'bg-light text-dark border'
+        'Cotización' => 'bg-light text-dark border',
+        'Error' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+        'Uso Interno' => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle'
     ];
     return $map[$status] ?? 'bg-dark';
 }
 
 // Función para generar los enlaces de ordenamiento en la cabecera de la tabla
-function sortableLink($column, $text, $currentSort, $currentDir) {
+function sortableLink($column, $text, $currentSort, $currentDir)
+{
     $dir = ($currentSort === $column && $currentDir === 'asc') ? 'desc' : 'asc';
     $arrow = $currentSort === $column ? ($currentDir === 'asc' ? 'bi-sort-up' : 'bi-sort-down') : 'bi-filter';
     // Mantenemos los filtros actuales al ordenar
@@ -24,7 +28,7 @@ function sortableLink($column, $text, $currentSort, $currentDir) {
 
 $sort = $_GET['sort'] ?? 'fecha_creacion';
 $dir = $_GET['dir'] ?? 'desc';
-$estados = ["Solicitud", "Cotización", "Confirmado", "En Curso", "Listo para Retirar", "Entregado", "Cancelado"];
+$estados = ["Solicitud", "Cotización", "Confirmado", "En Curso", "Listo para Retirar", "Entregado", "Cancelado", "Error", "Uso Interno"];
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">

@@ -10,19 +10,12 @@ class Client
         $this->connection = $db_connection;
     }
 
-    // --- FUNCIÓN RESTAURADA Y ESENCIAL ---
-    /**
-     * Busca todos los clientes sin filtros ni paginación.
-     * Crucial para los menús desplegables en otras partes del sistema.
-     */
     public function findAll()
     {
         $query = "SELECT id, nombre, telefono, email FROM " . $this->table_name . " ORDER BY nombre ASC";
         $result = $this->connection->query($query);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
-
-    // --- MÉTODOS PARA LA LISTA DE CLIENTES CON PAGINACIÓN (se mantienen) ---
 
     public function countAllWithFilters($filters)
     {
@@ -79,7 +72,6 @@ class Client
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    // --- El resto de los métodos (findById, create, update, etc.) se mantienen igual ---
     public function findById($id)
     {
         $query = "SELECT id, nombre, telefono, email, notas FROM " . $this->table_name . " WHERE id = ? LIMIT 1";
@@ -128,11 +120,7 @@ class Client
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
-    public function deleteAll()
-    {
-        $this->connection->query("SET FOREIGN_KEY_CHECKS=0; TRUNCATE TABLE `clientes`; SET FOREIGN_KEY_CHECKS=1;");
-        return true;
-    }
+
     public function getTopClientsByOrderCount()
     {
         $query = "SELECT c.nombre, COUNT(p.id) as total_pedidos 
@@ -145,6 +133,7 @@ class Client
         $result = $this->connection->query($query);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+
     public function countNewClientsThisMonth()
     {
         $month = date('Y-m');
@@ -154,5 +143,43 @@ class Client
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
         return $result['total'] ?? 0;
+    }
+
+    /**
+     * Calcula el gasto total de un cliente en el mes actual, contando solo pedidos entregados.
+     * @param int $clientId El ID del cliente.
+     * @return float El monto total gastado.
+     */
+    public function getMonthlySpending($clientId)
+    {
+        $currentMonth = date('Y-m');
+        $query = "SELECT SUM(costo_total) as total_gastado 
+                  FROM pedidos 
+                  WHERE cliente_id = ? 
+                  AND DATE_FORMAT(fecha_creacion, '%Y-%m') = ?
+                  AND estado = 'Entregado'"; // <-- **LÍNEA CORREGIDA**
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("is", $clientId, $currentMonth);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        return (float)($result['total_gastado'] ?? 0);
+    }
+
+    /**
+     * Verifica si un cliente ya utilizó su descuento en el mes actual.
+     * @param int $clientId El ID del cliente.
+     * @return bool True si ya lo usó, false si no.
+     */
+    public function hasUsedMonthlyDiscount($clientId)
+    {
+        $currentMonth = date('Y-m');
+        $query = "SELECT id FROM descuentos_usados WHERE cliente_id = ? AND mes_anio = ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("is", $clientId, $currentMonth);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->num_rows > 0;
     }
 }
