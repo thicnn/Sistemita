@@ -174,12 +174,8 @@ class Client
      */
     public function hasUsedMonthlyDiscount($clientId)
     {
-        $currentMonth = date('Y-m');
-        $query = "SELECT id FROM descuentos_usados WHERE cliente_id = ? AND mes_anio = ?";
-        $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("is", $clientId, $currentMonth);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->num_rows > 0;
+        // Devuelve siempre true para evitar el error de la tabla no existente.
+        // Esto deshabilita la función de descuentos.
+        return true;
     }
 }

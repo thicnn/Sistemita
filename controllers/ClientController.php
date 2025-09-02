@@ -29,24 +29,25 @@ class ClientController
         }
 
         // --- LÓGICA DE DESCUENTO MENSUAL (ya estaba correcta) ---
-        $gastoMensual = $this->clientModel->getMonthlySpending($id);
-        $yaUsoDescuento = $this->clientModel->hasUsedMonthlyDiscount($id);
-        $metaDescuento = 300;
+        // $gastoMensual = $this->clientModel->getMonthlySpending($id);
+        // $yaUsoDescuento = $this->clientModel->hasUsedMonthlyDiscount($id);
+        // $metaDescuento = 300;
 
-        $descuentoInfo = [
-            'disponible' => false,
-            'usado' => $yaUsoDescuento,
-            'gasto_actual' => $gastoMensual,
-            'restante' => max(0, $metaDescuento - $gastoMensual),
-            'meta' => $metaDescuento,
-            'monto_descuento' => 0,
-            'progreso_pct' => ($gastoMensual / $metaDescuento) * 100
-        ];
+        // $descuentoInfo = [
+        //     'disponible' => false,
+        //     'usado' => $yaUsoDescuento,
+        //     'gasto_actual' => $gastoMensual,
+        //     'restante' => max(0, $metaDescuento - $gastoMensual),
+        //     'meta' => $metaDescuento,
+        //     'monto_descuento' => 0,
+        //     'progreso_pct' => ($gastoMensual / $metaDescuento) * 100
+        // ];
 
-        if ($gastoMensual > $metaDescuento && !$yaUsoDescuento) {
-            $descuentoInfo['disponible'] = true;
-            $descuentoInfo['monto_descuento'] = $gastoMensual * 0.10;
-        }
+        // if ($gastoMensual > $metaDescuento && !$yaUsoDescuento) {
+        //     $descuentoInfo['disponible'] = true;
+        //     $descuentoInfo['monto_descuento'] = $gastoMensual * 0.10;
+        // }
+        $descuentoInfo = null;
 
         // --- CÁLCULO DE ESTADÍSTICAS GLOBALES (CORREGIDO) ---
         $client['pedidos'] = $this->orderModel->findByClientId($id);
