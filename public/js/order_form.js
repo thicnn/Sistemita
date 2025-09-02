@@ -293,6 +293,42 @@ document.addEventListener('DOMContentLoaded', function () {
     // Estado inicial
     validateForm();
 
+    // --- LÓGICA PARA CREAR CLIENTE EN MODAL ---
+    const saveNewClientBtn = document.getElementById('save-new-client-btn');
+    const newClientForm = document.getElementById('new-client-form');
+    const createClientModal = new bootstrap.Modal(document.getElementById('createClientModal'));
+    const newClientErrorDiv = document.getElementById('new-client-error');
 
+    saveNewClientBtn.addEventListener('click', async () => {
+        const formData = new FormData(newClientForm);
+        newClientErrorDiv.style.display = 'none';
+        newClientErrorDiv.textContent = '';
+
+        try {
+            const response = await fetch('/sistemagestion/clients/create_ajax', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Rellenar campos y cerrar modal
+                clientHiddenInput.value = result.client.id;
+                clientSearchInput.value = result.client.nombre;
+                createClientModal.hide();
+                newClientForm.reset();
+                validateForm();
+                checkClientDiscount(result.client.id, result.client.nombre);
+            } else {
+                newClientErrorDiv.textContent = result.message || 'Ocurrió un error.';
+                newClientErrorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error al crear cliente:', error);
+            newClientErrorDiv.textContent = 'Error de conexión. Inténtalo de nuevo.';
+            newClientErrorDiv.style.display = 'block';
+        }
+    });
 
 });

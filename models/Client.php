@@ -84,6 +84,7 @@ class Client
     {
         $query = "INSERT INTO " . $this->table_name . " (nombre, telefono, email, notas) VALUES (?, ?, ?, ?)";
         $stmt = $this->connection->prepare($query);
+        $email = empty($email) ? null : $email;
         $stmt->bind_param("ssss", $nombre, $telefono, $email, $notas);
         return $stmt->execute();
     }
@@ -91,6 +92,7 @@ class Client
     {
         $query = "UPDATE " . $this->table_name . " SET nombre = ?, telefono = ?, email = ?, notas = ? WHERE id = ?";
         $stmt = $this->connection->prepare($query);
+        $email = empty($email) ? null : $email;
         $stmt->bind_param("ssssi", $nombre, $telefono, $email, $notas, $id);
         return $stmt->execute();
     }

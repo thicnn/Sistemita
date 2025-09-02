@@ -14,8 +14,11 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="cliente_search" class="form-label">Buscar y Asociar Cliente</label>
-                    <div class="dropdown">
+                    <div class="input-group">
                         <input type="text" id="cliente_search" class="form-control dropdown-toggle" placeholder="Buscar por Nombre, Teléfono o Email..." data-bs-toggle="dropdown" autocomplete="off">
+                        <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#createClientModal">
+                            <i class="bi bi-person-plus-fill"></i>
+                        </button>
                         <input type="hidden" name="cliente_id" id="cliente_id">
                         <div id="search-results" class="dropdown-menu w-100"></div>
                     </div>
@@ -139,5 +142,45 @@
         color: var(--bs-secondary-color);
     }
 </style>
+
+<!-- Modal para Crear Cliente -->
+<div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createClientModalLabel">Crear Nuevo Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="new-client-form">
+                    <div class="mb-3">
+                        <label for="new_client_nombre" class="form-label">Nombre Completo</label>
+                        <input type="text" id="new_client_nombre" name="nombre" class="form-control" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="new_client_telefono" class="form-label">Teléfono</label>
+                            <input type="tel" id="new_client_telefono" name="telefono" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="new_client_email" class="form-label">Correo Electrónico</label>
+                            <input type="email" id="new_client_email" name="email" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_client_notas" class="form-label">Notas</label>
+                        <textarea id="new_client_notas" name="notas" rows="3" class="form-control"></textarea>
+                    </div>
+                    <div id="new-client-error" class="alert alert-danger" style="display: none;"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="save-new-client-btn" class="btn btn-primary">Guardar Cliente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="/sistemagestion/public/js/order_form.js"></script>

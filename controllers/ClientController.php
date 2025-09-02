@@ -195,4 +195,41 @@ class ClientController
         echo json_encode($response);
         exit();
     }
+
+    public function createClientAjax()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
+            exit();
+        }
+
+        $nombre = $_POST['nombre'] ?? '';
+        if (empty($nombre)) {
+            echo json_encode(['success' => false, 'message' => 'El nombre del cliente es obligatorio.']);
+            exit();
+        }
+
+        $telefono = $_POST['telefono'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $notas = $_POST['notas'] ?? '';
+
+        // Utiliza el método de modelo existente, que ya maneja emails vacíos
+        $success = $this->clientModel->create($nombre, $telefono, $email, $notas);
+
+        if ($success) {
+            $newClientId = $this->clientModel->connection->insert_id;
+            $newClient = $this->clientModel->findById($newClientId);
+            echo json_encode(['success' => true, 'client' => $newClient]);
+        } else {
+            // Intenta detectar el error de email duplicado
+            if ($this->clientModel->connection->errno === 1062) {
+                 echo json_encode(['success' => false, 'message' => 'El correo electrónico ya está registrado.']);
+            } else {
+                 echo json_encode(['success' => false, 'message' => 'Error al guardar el cliente en la base de datos.']);
+            }
+        }
+        exit();
+    }
 }

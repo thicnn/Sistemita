@@ -71,6 +71,9 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
         case 'clients/create':
             ($method === 'POST') ? $clientController->store() : $clientController->showCreateForm();
             break;
+        case 'clients/create_ajax':
+            if ($method === 'POST') $clientController->createClientAjax();
+            break;
         case 'clients/search':
             $clientController->search();
             break;
