@@ -49,7 +49,6 @@ function getStatusBadgeClass($status)
             </div>
         </div>
 
-        <?php if (isset($descuentoInfo) && is_array($descuentoInfo)): ?>
         <div class="card shadow-sm animated-card" style="animation-delay: 0.1s;">
             <div class="card-header bg-white d-flex align-items-center">
                 <i class="bi bi-star-fill me-2 text-warning"></i>
@@ -85,7 +84,6 @@ function getStatusBadgeClass($status)
                 <?php endif; ?>
             </div>
         </div>
-        <?php endif; ?>
     </div>
 
     <div class="col-lg-8">

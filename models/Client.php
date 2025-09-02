@@ -86,7 +86,10 @@ class Client
         $stmt = $this->connection->prepare($query);
         $email = empty($email) ? null : $email;
         $stmt->bind_param("ssss", $nombre, $telefono, $email, $notas);
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            return $this->connection->insert_id;
+        }
+        return false;
     }
     public function update($id, $nombre, $telefono, $email, $notas)
     {
@@ -176,8 +179,12 @@ class Client
      */
     public function hasUsedMonthlyDiscount($clientId)
     {
-        // Devuelve siempre true para evitar el error de la tabla no existente.
-        // Esto deshabilita la función de descuentos.
-        return true;
+        $currentMonth = date('Y-m');
+        $query = "SELECT id FROM descuentos_usados WHERE cliente_id = ? AND mes_anio = ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("is", $clientId, $currentMonth);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->num_rows > 0;
     }
 }

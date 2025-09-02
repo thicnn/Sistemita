@@ -24,6 +24,19 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `descuentos_usados`
+--
+
+CREATE TABLE `descuentos_usados` (
+  `id` int(11) NOT NULL,
+  `cliente_id` int(11) NOT NULL,
+  `mes_anio` varchar(7) NOT NULL,
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `pedidos_errores`
 --
 
@@ -364,6 +377,14 @@ ALTER TABLE `pedidos`
   ADD KEY `usuario_id` (`usuario_id`);
 
 --
+-- Indices de la tabla `descuentos_usados`
+--
+ALTER TABLE `descuentos_usados`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `cliente_mes` (`cliente_id`,`mes_anio`),
+  ADD KEY `cliente_id` (`cliente_id`);
+
+--
 -- Indices de la tabla `pedidos_errores`
 --
 ALTER TABLE `pedidos_errores`
@@ -444,6 +465,12 @@ ALTER TABLE `pedidos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3468;
 
 --
+-- AUTO_INCREMENT de la tabla `descuentos_usados`
+--
+ALTER TABLE `descuentos_usados`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `pedidos_errores`
 --
 ALTER TABLE `pedidos_errores`
@@ -502,6 +529,12 @@ ALTER TABLE `pagos`
 ALTER TABLE `pedidos`
   ADD CONSTRAINT `pedidos_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `pedidos_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `descuentos_usados`
+--
+ALTER TABLE `descuentos_usados`
+  ADD CONSTRAINT `descuentos_usados_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `pedidos_errores`

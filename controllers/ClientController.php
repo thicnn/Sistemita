@@ -29,25 +29,24 @@ class ClientController
         }
 
         // --- LÓGICA DE DESCUENTO MENSUAL (ya estaba correcta) ---
-        // $gastoMensual = $this->clientModel->getMonthlySpending($id);
-        // $yaUsoDescuento = $this->clientModel->hasUsedMonthlyDiscount($id);
-        // $metaDescuento = 300;
+        $gastoMensual = $this->clientModel->getMonthlySpending($id);
+        $yaUsoDescuento = $this->clientModel->hasUsedMonthlyDiscount($id);
+        $metaDescuento = 300;
 
-        // $descuentoInfo = [
-        //     'disponible' => false,
-        //     'usado' => $yaUsoDescuento,
-        //     'gasto_actual' => $gastoMensual,
-        //     'restante' => max(0, $metaDescuento - $gastoMensual),
-        //     'meta' => $metaDescuento,
-        //     'monto_descuento' => 0,
-        //     'progreso_pct' => ($gastoMensual / $metaDescuento) * 100
-        // ];
+        $descuentoInfo = [
+            'disponible' => false,
+            'usado' => $yaUsoDescuento,
+            'gasto_actual' => $gastoMensual,
+            'restante' => max(0, $metaDescuento - $gastoMensual),
+            'meta' => $metaDescuento,
+            'monto_descuento' => 0,
+            'progreso_pct' => ($gastoMensual / $metaDescuento) * 100
+        ];
 
-        // if ($gastoMensual > $metaDescuento && !$yaUsoDescuento) {
-        //     $descuentoInfo['disponible'] = true;
-        //     $descuentoInfo['monto_descuento'] = $gastoMensual * 0.10;
-        // }
-        $descuentoInfo = null;
+        if ($gastoMensual > $metaDescuento && !$yaUsoDescuento) {
+            $descuentoInfo['disponible'] = true;
+            $descuentoInfo['monto_descuento'] = $gastoMensual * 0.10;
+        }
 
         // --- CÁLCULO DE ESTADÍSTICAS GLOBALES (CORREGIDO) ---
         $client['pedidos'] = $this->orderModel->findByClientId($id);
@@ -216,19 +215,13 @@ class ClientController
         $notas = $_POST['notas'] ?? '';
 
         // Utiliza el método de modelo existente, que ya maneja emails vacíos
-        $success = $this->clientModel->create($nombre, $telefono, $email, $notas);
+        $newClientId = $this->clientModel->create($nombre, $telefono, $email, $notas);
 
-        if ($success) {
-            $newClientId = $this->clientModel->connection->insert_id;
+        if ($newClientId) {
             $newClient = $this->clientModel->findById($newClientId);
             echo json_encode(['success' => true, 'client' => $newClient]);
         } else {
-            // Intenta detectar el error de email duplicado
-            if ($this->clientModel->connection->errno === 1062) {
-                 echo json_encode(['success' => false, 'message' => 'El correo electrónico ya está registrado.']);
-            } else {
-                 echo json_encode(['success' => false, 'message' => 'Error al guardar el cliente en la base de datos.']);
-            }
+            echo json_encode(['success' => false, 'message' => 'Error al guardar el cliente. Es posible que el email ya esté en uso.']);
         }
         exit();
     }
