@@ -10,6 +10,7 @@ require_once '../controllers/ClientController.php';
 require_once '../controllers/OrderController.php';
 require_once '../controllers/ReportController.php';
 require_once '../controllers/AdminController.php';
+require_once '../controllers/ErrorController.php';
 
 // Creación de instancias de los controladores
 $authController = new AuthController($connection);
@@ -17,6 +18,7 @@ $clientController = new ClientController($connection);
 $orderController = new OrderController($connection);
 $reportController = new ReportController($connection);
 $adminController = new AdminController($connection);
+$errorController = new ErrorController($connection);
 
 $url = $_GET['url'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -79,6 +81,11 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
             break;
         case 'orders/create':
             ($method === 'POST') ? $orderController->store() : $orderController->showCreateForm();
+            break;
+
+        // Errores
+        case 'errors/create':
+            ($method === 'POST') ? $errorController->store() : $errorController->showCreateForm();
             break;
 
         // Reportes

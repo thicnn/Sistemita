@@ -26,9 +26,11 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
+                        <th>Descripción</th>
                         <th>Tipo</th>
                         <th>Categoría</th>
-                        <th>Descripción</th>
+                        <th>Impresora</th>
+                        <th class="text-center">Veces Pedido</th>
                         <th class="text-end">Precio</th>
                         <th class="text-center">Disponibilidad</th>
                         <th class="text-center">Acciones</th>
@@ -49,19 +51,21 @@
     function renderTable(products) {
         productsTableBody.innerHTML = '';
         if (products.length === 0) {
-            productsTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-muted">No se encontraron productos.</td></tr>';
+            productsTableBody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-muted">No se encontraron productos.</td></tr>';
             return;
         }
         products.forEach(product => {
-            const availabilityBadge = product.disponible == 1 
-                ? '<span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Activo</span>' 
+            const availabilityBadge = product.disponible == 1
+                ? '<span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Activo</span>'
                 : '<span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">Inactivo</span>';
-            
+
             const row = `
             <tr>
+                <td>${product.descripcion}</td>
                 <td>${product.tipo}</td>
                 <td>${product.categoria}</td>
-                <td>${product.descripcion}</td>
+                <td>${product.maquina_nombre}</td>
+                <td class="text-center">${product.veces_pedido}</td>
                 <td class="text-end">$${parseFloat(product.precio).toFixed(2)}</td>
                 <td class="text-center">${availabilityBadge}</td>
                 <td class="text-center">

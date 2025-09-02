@@ -11,13 +11,13 @@ class Product
 
     public function findAllAvailable()
     {
-        // AÑADIMOS EL CASE PARA OBTENER EL NOMBRE DE LA MÁQUINA
         $query = "SELECT p.*,
                         CASE
                             WHEN p.maquina_id = 1 THEN 'Bh-227'
                             WHEN p.maquina_id = 2 THEN 'C454e'
                             ELSE 'N/A'
-                        END as maquina_nombre
+                        END as maquina_nombre,
+                        (SELECT COUNT(*) FROM items_pedido WHERE descripcion = p.descripcion) as veces_pedido
                   FROM " . $this->table_name . " p
                   WHERE p.disponible = 1
                   ORDER BY p.tipo, p.categoria, p.descripcion";
@@ -54,18 +54,25 @@ class Product
 
     public function searchAndFilter($filters)
     {
-        $query = "SELECT * FROM " . $this->table_name;
+        $query = "SELECT p.*,
+                        CASE
+                            WHEN p.maquina_id = 1 THEN 'Bh-227'
+                            WHEN p.maquina_id = 2 THEN 'C454e'
+                            ELSE 'N/A'
+                        END as maquina_nombre,
+                        (SELECT COUNT(*) FROM items_pedido WHERE descripcion = p.descripcion) as veces_pedido
+                  FROM " . $this->table_name . " p";
         $where = [];
         $params = [];
         $types = '';
 
         if (!empty($filters['search'])) {
-            $where[] = "descripcion LIKE ?";
+            $where[] = "p.descripcion LIKE ?";
             $params[] = '%' . $filters['search'] . '%';
             $types .= 's';
         }
         if (!empty($filters['tipo'])) {
-            $where[] = "tipo = ?";
+            $where[] = "p.tipo = ?";
             $params[] = $filters['tipo'];
             $types .= 's';
         }
@@ -73,7 +80,7 @@ class Product
         if (!empty($where)) {
             $query .= " WHERE " . implode(' AND ', $where);
         }
-        $query .= " ORDER BY tipo, categoria, descripcion";
+        $query .= " ORDER BY p.tipo, p.categoria, p.descripcion";
 
         $stmt = $this->connection->prepare($query);
         if (!empty($params)) {

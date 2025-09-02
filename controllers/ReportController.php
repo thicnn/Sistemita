@@ -36,6 +36,10 @@ class ReportController
         // --- NUEVAS LLAMADAS A LOS MÉTODOS PARA LOS GRÁFICOS ---
         $salesOverTime = $this->reportModel->getSalesOverTime();
         $topProducts = $this->reportModel->getTopSellingProducts($startDate, $endDate);
+
+        $selectedYear = $_GET['year'] ?? date('Y');
+        $newClientsData = $this->reportModel->getNewClientsPerMonth($selectedYear);
+        $totalLosses = $this->reportModel->getLosses($startDate, $endDate);
         // --- FIN DE NUEVAS LLAMADAS ---
 
         $c454e_bn_prod = $this->reportModel->getProductionCountForPeriod(2, 'Impresion', 'blanco y negro', $startDate, $endDate) + $this->reportModel->getProductionCountForPeriod(2, 'Fotocopia', 'blanco y negro', $startDate, $endDate);

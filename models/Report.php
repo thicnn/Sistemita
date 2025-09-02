@@ -36,7 +36,38 @@ class Report
         $result = $this->connection->query($query);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+    public function getNewClientsPerMonth($year)
+    {
+        $query = "SELECT
+                    DATE_FORMAT(fecha_creacion, '%Y-%m') as mes,
+                    COUNT(id) as total_clientes
+                  FROM clientes
+                  WHERE YEAR(fecha_creacion) = ?
+                  GROUP BY mes
+                  ORDER BY mes ASC";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("i", $year);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
+        // Rellenar meses sin nuevos clientes
+        $clientsByMonth = [];
+        foreach ($data as $row) {
+            $clientsByMonth[$row['mes']] = $row['total_clientes'];
+        }
+
+        $fullYearData = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthStr = $year . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
+            $fullYearData[] = [
+                'mes' => $monthStr,
+                'total_clientes' => $clientsByMonth[$monthStr] ?? 0
+            ];
+        }
+
+        return $fullYearData;
+    }
     // --- NUEVO MÉTODO ---
     /**
      * Obtiene los productos más vendidos en un período de tiempo.
@@ -189,5 +220,16 @@ class Report
         $stmt->execute();
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getLosses($startDate, $endDate)
+    {
+        $endDate = $endDate . ' 23:59:59';
+        $query = "SELECT SUM(costo_total) as total_losses FROM pedidos_errores WHERE fecha_creacion BETWEEN ? AND ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['total_losses'] ?? 0;
     }
 }

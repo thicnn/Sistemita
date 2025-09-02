@@ -34,12 +34,47 @@ $nombreMesSeleccionado = $mesesEnEspanol[$numeroMes] . ' de ' . $anio;
 
 <div class="row g-4 mb-4">
     <div class="col-12">
+        <div class="card shadow-sm animated-card bg-danger-subtle text-danger-emphasis">
+            <div class="card-body text-center">
+                <h5 class="card-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Pérdidas por Errores en <?php echo $nombreMesSeleccionado; ?></h5>
+                <p class="card-text fs-2 fw-bold">$<?php echo number_format($totalLosses, 2); ?></p>
+                <a href="/sistemagestion/errors/create" class="btn btn-sm btn-outline-danger">Registrar Nuevo Error</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
         <div class="card shadow-sm animated-card" style="animation-delay: 0.1s;">
             <div class="card-header bg-white">
                 <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Evolución de Ventas (Últimos 6 Meses)</h5>
             </div>
             <div class="card-body">
                 <canvas id="salesOverTimeChart" style="min-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm animated-card" style="animation-delay: 0.2s;">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Clientes Nuevos por Mes</h5>
+                <form action="/sistemagestion/reports" method="GET" class="d-flex align-items-center gap-2">
+                    <label for="year-selector" class="form-label mb-0">Año:</label>
+                    <select name="year" id="year-selector" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                        <?php for ($y = date('Y'); $y >= 2023; $y--): ?>
+                            <option value="<?php echo $y; ?>" <?php echo ($y == $selectedYear) ? 'selected' : ''; ?>>
+                                <?php echo $y; ?>
+                            </option>
+                        <?php endfor; ?>
+                    </select>
+                </form>
+            </div>
+            <div class="card-body">
+                <canvas id="newClientsChart" style="min-height: 250px;"></canvas>
             </div>
         </div>
     </div>
@@ -384,5 +419,47 @@ $nombreMesSeleccionado = $mesesEnEspanol[$numeroMes] . ' de ' . $anio;
                 colorInput.style.display = 'block';
             }
         }).dispatchEvent(new Event('change'));
+
+        // Gráfico de Clientes Nuevos
+        const newClientsCtx = document.getElementById('newClientsChart');
+        if (newClientsCtx) {
+            const newClientsData = <?php echo json_encode($newClientsData ?? []); ?>;
+            const clientLabels = newClientsData.map(d => {
+                const date = new Date(d.mes + '-02');
+                return date.toLocaleString('es-ES', { month: 'long' });
+            });
+            const clientValues = newClientsData.map(d => d.total_clientes);
+
+            new Chart(newClientsCtx, {
+                type: 'bar',
+                data: {
+                    labels: clientLabels,
+                    datasets: [{
+                        label: 'Clientes Nuevos',
+                        data: clientValues,
+                        backgroundColor: 'rgba(255, 193, 7, 0.6)',
+                        borderColor: 'rgba(255, 193, 7, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1 // Asegura que el eje Y solo muestre enteros
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
     });
 </script>
