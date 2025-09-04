@@ -104,13 +104,39 @@ class Report
     public function getCounterHistory($filters = [])
     {
         $query = "SELECT * FROM impresora_contadores";
-        if (!empty($filters['month'])) {
-            $query .= " WHERE DATE_FORMAT(fecha_fin, '%Y-%m') = ?";
+        $where = [];
+        $params = [];
+        $types = '';
+
+        if (!empty($filters['fecha_inicio'])) {
+            $where[] = "fecha_fin >= ?";
+            $params[] = $filters['fecha_inicio'];
+            $types .= 's';
         }
-        $query .= " ORDER BY fecha_fin DESC";
+        if (!empty($filters['fecha_fin'])) {
+            $where[] = "fecha_fin <= ?";
+            $params[] = $filters['fecha_fin'];
+            $types .= 's';
+        }
+
+        if (!empty($where)) {
+            $query .= " WHERE " . implode(' AND ', $where);
+        }
+
+        $orderBy = 'fecha_fin';
+        $orderDir = 'DESC';
+        $allowedSorts = ['maquina_nombre', 'fecha_inicio', 'fecha_fin', 'contador_bn', 'contador_color'];
+        if (!empty($filters['sort']) && in_array($filters['sort'], $allowedSorts)) {
+            $orderBy = $filters['sort'];
+        }
+        if (!empty($filters['dir']) && in_array(strtoupper($filters['dir']), ['ASC', 'DESC'])) {
+            $orderDir = strtoupper($filters['dir']);
+        }
+        $query .= " ORDER BY $orderBy $orderDir";
+
         $stmt = $this->connection->prepare($query);
-        if (!empty($filters['month'])) {
-            $stmt->bind_param("s", $filters['month']);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
         }
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -131,20 +157,32 @@ class Report
         $where = [];
         $params = [];
         $types = '';
-        if (!empty($filters['month'])) {
-            $where[] = "DATE_FORMAT(fecha_pago, '%Y-%m') = ?";
-            $params[] = $filters['month'];
+
+        if (!empty($filters['fecha_inicio'])) {
+            $where[] = "fecha_pago >= ?";
+            $params[] = $filters['fecha_inicio'];
             $types .= 's';
         }
-        if (!empty($filters['amount']) && is_numeric($filters['amount'])) {
-            $where[] = "monto >= ?";
-            $params[] = $filters['amount'];
-            $types .= 'd';
+        if (!empty($filters['fecha_fin'])) {
+            $where[] = "fecha_pago <= ?";
+            $params[] = $filters['fecha_fin'];
+            $types .= 's';
         }
+
         if (!empty($where)) {
             $query .= " WHERE " . implode(' AND ', $where);
         }
-        $query .= " ORDER BY fecha_pago DESC";
+
+        $orderBy = 'fecha_pago';
+        $orderDir = 'DESC';
+        $allowedSorts = ['fecha_pago', 'descripcion', 'monto'];
+        if (!empty($filters['sort']) && in_array($filters['sort'], $allowedSorts)) {
+            $orderBy = $filters['sort'];
+        }
+        if (!empty($filters['dir']) && in_array(strtoupper($filters['dir']), ['ASC', 'DESC'])) {
+            $orderDir = strtoupper($filters['dir']);
+        }
+        $query .= " ORDER BY $orderBy $orderDir";
 
         $stmt = $this->connection->prepare($query);
         if (!empty($params)) {
@@ -378,5 +416,212 @@ class Report
             }
         }
         return $distribution;
+    }
+
+    public function getSalesDetails($startDate, $endDate, $clientId = null, $orderBy = 'p.fecha_creacion DESC')
+    {
+        $endDate = $endDate . ' 23:59:59';
+        $params = [$startDate, $endDate];
+        $types = 'ss';
+
+        $sql = "SELECT
+                    p.id as pedido_id,
+                    c.nombre as cliente_nombre,
+                    p.fecha_creacion,
+                    p.costo_total,
+                    p.descuento_total,
+                    (p.costo_total - p.descuento_total) as total_final,
+                    SUM(
+                        CASE
+                            WHEN prod.tipo = 'Servicio' THEN 0
+                            WHEN prod.maquina_id = 1 THEN i.cantidad * (0.83 + CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END)
+                            WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
+                            ELSE 0
+                        END
+                    ) as costo_produccion
+                FROM pedidos p
+                JOIN clientes c ON p.cliente_id = c.id
+                LEFT JOIN items_pedido i ON p.id = i.pedido_id
+                LEFT JOIN productos prod ON i.producto_id = prod.id
+                WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";
+
+        if ($clientId) {
+            $sql .= " AND p.cliente_id = ?";
+            $params[] = $clientId;
+            $types .= 'i';
+        }
+
+        $sql .= " GROUP BY p.id";
+
+        // Validate orderBy to prevent SQL injection
+        $allowedOrderBy = ['p.fecha_creacion DESC', 'p.fecha_creacion ASC', 'total_final DESC', 'total_final ASC', 'ganancia DESC', 'ganancia ASC'];
+        if (in_array($orderBy, $allowedOrderBy)) {
+            if (strpos($orderBy, 'ganancia') !== false) {
+                // We need to order by the calculated profit
+                $sql .= " ORDER BY (total_final - costo_produccion) " . (strpos($orderBy, 'ASC') ? 'ASC' : 'DESC');
+            } else {
+                $sql .= " ORDER BY " . $orderBy;
+            }
+        } else {
+            $sql .= " ORDER BY p.fecha_creacion DESC";
+        }
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $sales = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+        // Calculate profit for each sale
+        foreach ($sales as &$sale) {
+            $sale['ganancia'] = $sale['total_final'] - $sale['costo_produccion'];
+        }
+
+        return $sales;
+    }
+
+    public function getSalesAndProfitEvolution($startDate, $endDate)
+    {
+        $endDate = $endDate . ' 23:59:59';
+        $query = "SELECT
+                    DATE(p.fecha_creacion) as dia,
+                    SUM(p.costo_total - p.descuento_total) as total_ventas,
+                    SUM(
+                        (p.costo_total - p.descuento_total) -
+                        SUM(
+                            CASE
+                                WHEN prod.tipo = 'Servicio' THEN 0
+                                WHEN prod.maquina_id = 1 THEN i.cantidad * (0.83 + CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END)
+                                WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
+                                ELSE 0
+                            END
+                        )
+                    ) as total_ganancia
+                FROM pedidos p
+                LEFT JOIN items_pedido i ON p.id = i.pedido_id
+                LEFT JOIN productos prod ON i.producto_id = prod.id
+                WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'
+                GROUP BY dia
+                ORDER BY dia ASC";
+
+        // The above query is complex and has nested SUMs which is not standard SQL.
+        // I will rewrite it to be more efficient and correct.
+
+        $sql = "SELECT
+                    DATE(p.fecha_creacion) as dia,
+                    (p.costo_total - p.descuento_total) as venta,
+                    (
+                        CASE
+                            WHEN prod.tipo = 'Servicio' THEN 0
+                            WHEN prod.maquina_id = 1 THEN i.cantidad * (0.83 + CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END)
+                            WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
+                            ELSE 0
+                        END
+                    ) as costo_item
+                FROM pedidos p
+                LEFT JOIN items_pedido i ON p.id = i.pedido_id
+                LEFT JOIN productos prod ON i.producto_id = prod.id
+                WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+        $evolution = [];
+        foreach ($items as $item) {
+            $day = $item['dia'];
+            if (!isset($evolution[$day])) {
+                $evolution[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0];
+            }
+        }
+
+        // This is still not right. The venta is per order, but the cost is per item.
+        // I need to group by order first to get the total cost per order.
+
+        $sql = "SELECT
+                    p.id,
+                    DATE(p.fecha_creacion) as dia,
+                    (p.costo_total - p.descuento_total) as venta,
+                    SUM(
+                        CASE
+                            WHEN prod.tipo = 'Servicio' THEN 0
+                            WHEN prod.maquina_id = 1 THEN i.cantidad * (0.83 + CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END)
+                            WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
+                            ELSE 0
+                        END
+                    ) as costo_total_pedido
+                FROM pedidos p
+                LEFT JOIN items_pedido i ON p.id = i.pedido_id
+                LEFT JOIN productos prod ON i.producto_id = prod.id
+                WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'
+                GROUP BY p.id";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $orders = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+        $evolutionData = [];
+        foreach ($orders as $order) {
+            $day = $order['dia'];
+            if (!isset($evolutionData[$day])) {
+                $evolutionData[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0];
+            }
+            $evolutionData[$day]['total_ventas'] += $order['venta'];
+            $evolutionData[$day]['total_ganancia'] += $order['venta'] - $order['costo_total_pedido'];
+        }
+
+        // Sort by date
+        ksort($evolutionData);
+
+        return array_values($evolutionData);
+    }
+
+    public function getTopSellingProductsPaginated($limit, $offset)
+    {
+        $query = "SELECT
+                    prod.id,
+                    prod.descripcion,
+                    SUM(i.cantidad) as unidades_vendidas,
+                    SUM(i.subtotal) as ingresos_generados
+                  FROM items_pedido i
+                  JOIN productos prod ON i.producto_id = prod.id
+                  GROUP BY prod.id, prod.descripcion
+                  ORDER BY unidades_vendidas DESC
+                  LIMIT ? OFFSET ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ii", $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function countTopSellingProducts()
+    {
+        $query = "SELECT COUNT(DISTINCT producto_id) as total FROM items_pedido";
+        $result = $this->connection->query($query);
+        $row = $result->fetch_assoc();
+        return $row['total'] ?? 0;
+    }
+
+    public function getLeastSellingProductsPaginated($limit, $offset)
+    {
+        $query = "SELECT
+                    p.id,
+                    p.descripcion,
+                    IFNULL(SUM(ip.cantidad), 0) as unidades_vendidas
+                  FROM productos p
+                  LEFT JOIN items_pedido ip ON p.id = ip.producto_id
+                  GROUP BY p.id, p.descripcion
+                  ORDER BY unidades_vendidas ASC, p.descripcion ASC
+                  LIMIT ? OFFSET ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ii", $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 }

@@ -52,9 +52,18 @@ class Order
             $types .= 'ss';
         }
         if (!empty($filters['estado'])) {
-            $where[] = "p.estado = ?";
-            $params[] = $filters['estado'];
-            $types .= 's';
+            if (is_array($filters['estado'])) {
+                $placeholders = implode(',', array_fill(0, count($filters['estado']), '?'));
+                $where[] = "p.estado IN ($placeholders)";
+                foreach ($filters['estado'] as $estado) {
+                    $params[] = $estado;
+                }
+                $types .= str_repeat('s', count($filters['estado']));
+            } else {
+                $where[] = "p.estado = ?";
+                $params[] = $filters['estado'];
+                $types .= 's';
+            }
         }
         if (!empty($filters['fecha_inicio'])) {
             $where[] = "DATE(p.fecha_creacion) >= ?";
@@ -96,9 +105,18 @@ class Order
             $types .= 'ss';
         }
         if (!empty($filters['estado'])) {
-            $where[] = "p.estado = ?";
-            $params[] = $filters['estado'];
-            $types .= 's';
+            if (is_array($filters['estado'])) {
+                $placeholders = implode(',', array_fill(0, count($filters['estado']), '?'));
+                $where[] = "p.estado IN ($placeholders)";
+                foreach ($filters['estado'] as $estado) {
+                    $params[] = $estado;
+                }
+                $types .= str_repeat('s', count($filters['estado']));
+            } else {
+                $where[] = "p.estado = ?";
+                $params[] = $filters['estado'];
+                $types .= 's';
+            }
         }
         if (!empty($filters['fecha_inicio'])) {
             $where[] = "DATE(p.fecha_creacion) >= ?";
@@ -398,5 +416,20 @@ class Order
         $this->connection->query("TRUNCATE TABLE `pedidos`;");
         $this->connection->query("SET FOREIGN_KEY_CHECKS=1;");
         return true;
+    }
+
+    public function findOrdersByProductId($productId)
+    {
+        $query = "SELECT p.id, p.fecha_creacion, p.estado, c.nombre as nombre_cliente, ip.cantidad, ip.subtotal
+                  FROM pedidos p
+                  JOIN clientes c ON p.cliente_id = c.id
+                  JOIN items_pedido ip ON p.id = ip.pedido_id
+                  WHERE ip.producto_id = ?
+                  ORDER BY p.fecha_creacion DESC";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 }

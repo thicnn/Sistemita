@@ -187,4 +187,66 @@ class Client
         $result = $stmt->get_result();
         return $result->num_rows > 0;
     }
+
+    public function getProductTrendsByClientId($clientId)
+    {
+        $query = "SELECT
+                    prod.descripcion,
+                    SUM(ip.cantidad) as total_cantidad,
+                    SUM(ip.subtotal) as total_subtotal
+                  FROM items_pedido ip
+                  JOIN pedidos p ON ip.pedido_id = p.id
+                  JOIN productos prod ON ip.producto_id = prod.id
+                  WHERE p.cliente_id = ?
+                  AND p.estado NOT IN ('Cancelado', 'Cotizacion', 'Solicitud')
+                  GROUP BY prod.id, prod.descripcion
+                  ORDER BY total_cantidad DESC";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("i", $clientId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getTopClients($filters)
+    {
+        $query = "SELECT
+                    c.id,
+                    c.nombre,
+                    COUNT(p.id) as total_pedidos,
+                    SUM(p.costo_total - p.descuento_total) as total_gastado
+                  FROM clientes c
+                  JOIN pedidos p ON c.id = p.cliente_id
+                  WHERE p.estado = 'Entregado'";
+
+        $params = [];
+        $types = '';
+
+        if (!empty($filters['fecha_inicio'])) {
+            $query .= " AND p.fecha_creacion >= ?";
+            $params[] = $filters['fecha_inicio'];
+            $types .= 's';
+        }
+        if (!empty($filters['fecha_fin'])) {
+            $query .= " AND p.fecha_creacion <= ?";
+            $params[] = $filters['fecha_fin'] . ' 23:59:59';
+            $types .= 's';
+        }
+
+        $query .= " GROUP BY c.id, c.nombre";
+
+        $orderBy = 'total_gastado';
+        if (!empty($filters['sort']) && in_array($filters['sort'], ['total_pedidos', 'total_gastado'])) {
+            $orderBy = $filters['sort'];
+        }
+        $query .= " ORDER BY $orderBy DESC";
+
+        $stmt = $this->connection->prepare($query);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
 }

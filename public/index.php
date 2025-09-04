@@ -95,6 +95,24 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
         case 'reports':
             $reportController->index();
             break;
+        case 'reports/dashboard':
+            $reportController->dashboard();
+            break;
+        case 'reports/sales':
+            $reportController->sales();
+            break;
+        case 'reports/orders':
+            $reportController->orders();
+            break;
+        case 'reports/control':
+            $reportController->control();
+            break;
+        case 'reports/products':
+            $reportController->products();
+            break;
+        case 'reports/clients':
+            $reportController->clients();
+            break;
         case 'reports/store_counter':
             if ($method === 'POST') $reportController->storeCounter();
             break;

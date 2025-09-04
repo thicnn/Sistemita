@@ -97,4 +97,19 @@ class Product
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
+
+    public function getAllProducts()
+    {
+        $query = "SELECT id, descripcion FROM " . $this->table_name . " ORDER BY descripcion ASC";
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function countAll()
+    {
+        $query = "SELECT COUNT(id) as total FROM " . $this->table_name;
+        $result = $this->connection->query($query);
+        $row = $result->fetch_assoc();
+        return $row['total'] ?? 0;
+    }
 }
