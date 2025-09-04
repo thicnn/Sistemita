@@ -429,8 +429,7 @@ class Report
                     c.nombre as cliente_nombre,
                     p.fecha_creacion,
                     p.costo_total,
-                    p.descuento_total,
-                    (p.costo_total - p.descuento_total) as total_final,
+                    p.costo_total as total_final,
                     SUM(
                         CASE
                             WHEN prod.tipo = 'Servicio' THEN 0

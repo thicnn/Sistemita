@@ -214,7 +214,7 @@ class Client
                     c.id,
                     c.nombre,
                     COUNT(p.id) as total_pedidos,
-                    SUM(p.costo_total - p.descuento_total) as total_gastado
+                    SUM(p.costo_total) as total_gastado
                   FROM clientes c
                   JOIN pedidos p ON c.id = p.cliente_id
                   WHERE p.estado = 'Entregado'";

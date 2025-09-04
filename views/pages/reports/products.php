@@ -48,14 +48,30 @@
         </form>
 
         <hr class="my-4">
-        <h5 class="mb-3">Seleccione un producto de la lista para ver sus pedidos:</h5>
-        <div class="list-group">
-            <?php foreach ($allProducts as $product): ?>
-                <a href="/sistemagestion/reports/products?product_id=<?= $product['id']; ?>" class="list-group-item list-group-item-action <?= (isset($selectedProductId) && $selectedProductId == $product['id']) ? 'active' : ''; ?>">
-                    <?= htmlspecialchars($product['descripcion']); ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
+        <form action="/sistemagestion/reports/products" method="GET">
+            <!-- Hidden fields to preserve filters -->
+            <input type="hidden" name="tipo" value="<?= htmlspecialchars($productFilters['tipo']); ?>">
+            <input type="hidden" name="maquina_id" value="<?= htmlspecialchars($productFilters['maquina_id']); ?>">
+            <input type="hidden" name="categoria" value="<?= htmlspecialchars($productFilters['categoria']); ?>">
+            <input type="hidden" name="search" value="<?= htmlspecialchars($productFilters['search']); ?>">
+
+            <div class="row g-3 align-items-center">
+                <div class="col-md-10">
+                    <label for="product_id" class="form-label">Seleccione un producto de la lista para ver sus pedidos:</label>
+                    <select id="product_id" name="product_id" class="form-select">
+                        <option value="">-- Productos Filtrados --</option>
+                        <?php foreach ($allProducts as $product): ?>
+                            <option value="<?= $product['id']; ?>" <?= (isset($selectedProductId) && $selectedProductId == $product['id']) ? 'selected' : ''; ?>>
+                                <?= htmlspecialchars($product['descripcion']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button type="submit" class="btn btn-info mt-4">Ver Pedidos</button>
+                </div>
+            </div>
+        </form>
 
         <?php if ($selectedProductId): ?>
         <hr class="my-4">
