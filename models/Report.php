@@ -542,7 +542,7 @@ class Report
         $sql = "SELECT
                     p.id,
                     DATE(p.fecha_creacion) as dia,
-                    (p.costo_total - p.descuento_total) as venta,
+                    p.costo_total as venta,
                     SUM(
                         CASE
                             WHEN prod.tipo = 'Servicio' THEN 0

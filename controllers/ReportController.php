@@ -330,7 +330,7 @@ class ReportController
             $this->reportModel->saveCounter($_POST['maquina'], $_POST['fecha_inicio'], $_POST['fecha_fin'], $_POST['contador_bn'], $_POST['contador_color'] ?? 0, $_POST['notas'] ?? '');
             $_SESSION['toast'] = ['message' => 'Contador registrado con éxito.', 'type' => 'success'];
         }
-        header('Location: /sistemagestion/reports');
+        header('Location: /sistemagestion/reports/control');
         exit();
     }
 
@@ -343,7 +343,7 @@ class ReportController
             $this->reportModel->saveProviderPayment($_POST['fecha_pago'], $_POST['descripcion'], $_POST['monto']);
             $_SESSION['toast'] = ['message' => 'Pago a proveedor registrado.', 'type' => 'success'];
         }
-        header('Location: /sistemagestion/reports');
+        header('Location: /sistemagestion/reports/control');
         exit();
     }
 
