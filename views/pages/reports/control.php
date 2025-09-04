@@ -142,28 +142,6 @@
         </div>
     </div>
 
-    <!-- Sales Distribution -->
-    <div class="col-lg-4">
-        <div class="card shadow-sm">
-            <div class="card-header"><h5 class="mb-0">Distribución de Ventas</h5></div>
-            <div class="card-body">
-                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Efectivo en Caja
-                        <span class="badge bg-success-subtle text-success-emphasis fs-6">$<?= number_format($salesDistribution['efectivo'], 2); ?></span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Acreditado en Banco
-                        <span class="badge bg-primary-subtle text-primary-emphasis fs-6">$<?= number_format($salesDistribution['debitado'], 2); ?></span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Pendiente de Acreditación
-                        <span class="badge bg-warning-subtle text-warning-emphasis fs-6">$<?= number_format($salesDistribution['pendiente'], 2); ?></span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>

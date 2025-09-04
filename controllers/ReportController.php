@@ -132,6 +132,9 @@ class ReportController
         $clients = $this->clientModel->findAll();
         $evolution = $this->reportModel->getSalesAndProfitEvolution($startDate, $endDate);
         $losses = $this->reportModel->getLosses($startDate, $endDate);
+        $salesDistribution = $this->reportModel->getSalesDistribution($startDate, $endDate);
+        $profitReport = $this->reportModel->getProfitByDateRange($startDate, $endDate);
+
 
         require_once '../views/layouts/header.php';
         require_once '../views/pages/reports/sales.php';
@@ -206,9 +209,6 @@ class ReportController
             'dir' => $_GET['counter_dir'] ?? 'DESC',
         ];
         $counterHistory = $this->reportModel->getCounterHistory($counterFilters);
-
-        // Sales Distribution
-        $salesDistribution = $this->reportModel->getSalesDistribution($startDate, $endDate);
 
         require_once '../views/layouts/header.php';
         require_once '../views/pages/reports/control.php';
