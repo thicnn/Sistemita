@@ -222,8 +222,20 @@ class ReportController
             exit();
         }
 
-        // Item Search
-        $allProducts = $this->productModel->getAllProducts();
+        // Item Search (now with filters)
+        $productFilters = [
+            'tipo' => $_GET['tipo'] ?? '',
+            'maquina_id' => $_GET['maquina_id'] ?? '',
+            'categoria' => $_GET['categoria'] ?? '',
+            'search' => $_GET['search'] ?? '',
+        ];
+        $allProducts = $this->productModel->searchAndFilter($productFilters);
+
+        // Data for filters
+        $tipos = $this->productModel->getDistinctTipos();
+        $maquinas = $this->productModel->getDistinctMaquinas();
+        $categorias = $this->productModel->getDistinctCategorias();
+
         $selectedProductId = $_GET['product_id'] ?? null;
         $ordersByProduct = [];
         if ($selectedProductId) {

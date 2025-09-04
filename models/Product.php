@@ -76,6 +76,16 @@ class Product
             $params[] = $filters['tipo'];
             $types .= 's';
         }
+        if (!empty($filters['maquina_id'])) {
+            $where[] = "p.maquina_id = ?";
+            $params[] = $filters['maquina_id'];
+            $types .= 'i';
+        }
+        if (!empty($filters['categoria'])) {
+            $where[] = "p.categoria = ?";
+            $params[] = $filters['categoria'];
+            $types .= 's';
+        }
 
         if (!empty($where)) {
             $query .= " WHERE " . implode(' AND ', $where);
@@ -111,5 +121,26 @@ class Product
         $result = $this->connection->query($query);
         $row = $result->fetch_assoc();
         return $row['total'] ?? 0;
+    }
+
+    public function getDistinctTipos()
+    {
+        $query = "SELECT DISTINCT tipo FROM " . $this->table_name . " ORDER BY tipo ASC";
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getDistinctMaquinas()
+    {
+        $query = "SELECT DISTINCT maquina_id FROM " . $this->table_name . " ORDER BY maquina_id ASC";
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getDistinctCategorias()
+    {
+        $query = "SELECT DISTINCT categoria FROM " . $this->table_name . " WHERE categoria IS NOT NULL AND categoria != '' ORDER BY categoria ASC";
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 }

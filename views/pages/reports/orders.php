@@ -74,7 +74,7 @@ function get_sort_link($title, $column, $filters) {
                         <?php foreach ($orders as $order): ?>
                             <tr>
                                 <td>#<?php echo $order['id']; ?></td>
-                                <td><?php echo htmlspecialchars($order['nombre_cliente']); ?></td>
+                                <td><?php echo htmlspecialchars($order['nombre_cliente'] ?? 'Cliente no encontrado'); ?></td>
                                 <td><span class="badge bg-secondary"><?php echo htmlspecialchars($order['estado']); ?></span></td>
                                 <td class="text-end">$<?php echo number_format($order['costo_total'], 2); ?></td>
                                 <td><?php echo date('d/m/Y H:i', strtotime($order['fecha_creacion'])); ?></td>

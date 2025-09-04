@@ -41,7 +41,7 @@
                             <?php else: foreach ($productionOrders as $order): ?>
                                 <tr>
                                     <td><a href="/sistemagestion/orders/show/<?php echo $order['id']; ?>">#<?php echo $order['id']; ?></a></td>
-                                    <td><?php echo htmlspecialchars($order['nombre_cliente']); ?></td>
+                                    <td><?php echo htmlspecialchars($order['nombre_cliente'] ?? 'Cliente no encontrado'); ?></td>
                                     <td><span class="badge bg-info"><?php echo htmlspecialchars($order['estado']); ?></span></td>
                                     <td><?php echo date('d/m/Y', strtotime($order['fecha_creacion'])); ?></td>
                                     <td class="text-end">$<?php echo number_format($order['costo_total'], 2); ?></td>

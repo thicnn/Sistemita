@@ -440,7 +440,7 @@ class Report
                         END
                     ) as costo_produccion
                 FROM pedidos p
-                JOIN clientes c ON p.cliente_id = c.id
+                LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN items_pedido i ON p.id = i.pedido_id
                 LEFT JOIN productos prod ON i.producto_id = prod.id
                 WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";

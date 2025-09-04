@@ -4,21 +4,58 @@
     <div class="card-header"><h5 class="mb-0">Buscar Pedidos por Producto</h5></div>
     <div class="card-body">
         <form action="/sistemagestion/reports/products" method="GET" class="row g-3 align-items-center">
-            <div class="col-md-10">
-                <label for="product_id" class="form-label">Seleccione un producto para ver en qué pedidos se solicitó:</label>
-                <select id="product_id" name="product_id" class="form-select">
-                    <option value="">-- Seleccione un producto --</option>
-                    <?php foreach ($allProducts as $product): ?>
-                        <option value="<?php echo $product['id']; ?>" <?php echo (isset($selectedProductId) && $selectedProductId == $product['id']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($product['descripcion']); ?>
+            <div class="col-md-3">
+                <label for="tipo" class="form-label">Tipo</label>
+                <select id="tipo" name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    <?php foreach ($tipos as $tipo): ?>
+                        <option value="<?= $tipo['tipo']; ?>" <?= (isset($productFilters['tipo']) && $productFilters['tipo'] == $tipo['tipo']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($tipo['tipo']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-2 text-end">
-                <button type="submit" class="btn btn-primary mt-4">Buscar</button>
+            <div class="col-md-2">
+                <label for="maquina_id" class="form-label">Máquina</label>
+                <select id="maquina_id" name="maquina_id" class="form-select">
+                    <option value="">Todas</option>
+                    <?php foreach ($maquinas as $maquina): ?>
+                        <option value="<?= $maquina['maquina_id']; ?>" <?= (isset($productFilters['maquina_id']) && $productFilters['maquina_id'] == $maquina['maquina_id']) ? 'selected' : ''; ?>>
+                            <?= ($maquina['maquina_id'] == 1) ? 'Bh-227' : 'C454e'; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="categoria" class="form-label">Categoría</label>
+                <select id="categoria" name="categoria" class="form-select">
+                    <option value="">Todas</option>
+                     <?php foreach ($categorias as $categoria): ?>
+                        <option value="<?= $categoria['categoria']; ?>" <?= (isset($productFilters['categoria']) && $productFilters['categoria'] == $categoria['categoria']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($categoria['categoria']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label">Descripción</label>
+                <input type="text" id="search" name="search" class="form-control" value="<?= htmlspecialchars($productFilters['search']); ?>">
+            </div>
+            <div class="col-12 text-end">
+                <a href="/sistemagestion/reports/products" class="btn btn-secondary">Limpiar</a>
+                <button type="submit" class="btn btn-primary">Buscar Productos</button>
             </div>
         </form>
+
+        <hr class="my-4">
+        <h5 class="mb-3">Seleccione un producto de la lista para ver sus pedidos:</h5>
+        <div class="list-group">
+            <?php foreach ($allProducts as $product): ?>
+                <a href="/sistemagestion/reports/products?product_id=<?= $product['id']; ?>" class="list-group-item list-group-item-action <?= (isset($selectedProductId) && $selectedProductId == $product['id']) ? 'active' : ''; ?>">
+                    <?= htmlspecialchars($product['descripcion']); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
 
         <?php if ($selectedProductId): ?>
         <hr class="my-4">
@@ -56,44 +93,6 @@
 </div>
 
 <div class="card shadow-sm mt-4">
-    <div class="card-header"><h5 class="mb-0">Top 25 Productos Menos Vendidos</h5></div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-sm table-striped">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th class="text-end">Unidades Vendidas</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($leastSellingProducts)): ?>
-                        <tr><td colspan="2" class="text-center text-muted">No hay datos de productos.</td></tr>
-                    <?php else: foreach ($leastSellingProducts as $product): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($product['descripcion']); ?></td>
-                            <td class="text-end"><?php echo $product['unidades_vendidas']; ?></td>
-                        </tr>
-                    <?php endforeach; endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <?php if ($leastSellingTotalPages > 1): ?>
-        <nav>
-            <ul class="pagination justify-content-center">
-                <?php for ($i = 1; $i <= $leastSellingTotalPages; $i++): ?>
-                <li class="page-item <?php echo ($i == $leastSellingPage) ? 'active' : ''; ?>">
-                    <a class="page-link" href="/sistemagestion/reports/products?least_page=<?php echo $i; ?>"><?php echo $i; ?></a>
-                </li>
-                <?php endfor; ?>
-            </ul>
-        </nav>
-        <?php endif; ?>
-    </div>
-</div>
-
-<div class="card shadow-sm mt-4">
     <div class="card-header"><h5 class="mb-0">Top 25 Productos Más Vendidos</h5></div>
     <div class="card-body">
         <div class="table-responsive">
@@ -125,6 +124,44 @@
                 <?php for ($i = 1; $i <= $topSellingTotalPages; $i++): ?>
                 <li class="page-item <?php echo ($i == $topSellingPage) ? 'active' : ''; ?>">
                     <a class="page-link" href="/sistemagestion/reports/products?top_page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                </li>
+                <?php endfor; ?>
+            </ul>
+        </nav>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-header"><h5 class="mb-0">Top 25 Productos Menos Vendidos</h5></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-end">Unidades Vendidas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($leastSellingProducts)): ?>
+                        <tr><td colspan="2" class="text-center text-muted">No hay datos de productos.</td></tr>
+                    <?php else: foreach ($leastSellingProducts as $product): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($product['descripcion']); ?></td>
+                            <td class="text-end"><?php echo $product['unidades_vendidas']; ?></td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <?php if ($leastSellingTotalPages > 1): ?>
+        <nav>
+            <ul class="pagination justify-content-center">
+                <?php for ($i = 1; $i <= $leastSellingTotalPages; $i++): ?>
+                <li class="page-item <?php echo ($i == $leastSellingPage) ? 'active' : ''; ?>">
+                    <a class="page-link" href="/sistemagestion/reports/products?least_page=<?php echo $i; ?>"><?php echo $i; ?></a>
                 </li>
                 <?php endfor; ?>
             </ul>

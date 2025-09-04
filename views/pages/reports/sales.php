@@ -82,7 +82,7 @@
                         <?php foreach ($sales as $sale): ?>
                             <tr>
                                 <td><a href="/sistemagestion/orders/show/<?php echo $sale['pedido_id']; ?>">#<?php echo $sale['pedido_id']; ?></a></td>
-                                <td><?php echo htmlspecialchars($sale['cliente_nombre']); ?></td>
+                                <td><?php echo htmlspecialchars($sale['cliente_nombre'] ?? 'Cliente no encontrado'); ?></td>
                                 <td><?php echo date('d/m/Y', strtotime($sale['fecha_creacion'])); ?></td>
                                 <td class="text-end">$<?php echo number_format($sale['costo_total'], 2); ?></td>
                                 <td class="text-end text-danger">-$<?php echo number_format($sale['descuento_total'], 2); ?></td>
