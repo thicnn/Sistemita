@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /sistemagestion/
+
+    # Si la solicitud es para un archivo o directorio que existe en la raíz, sírvelo directamente
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # De lo contrario, envía todo lo demás a la carpeta public
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

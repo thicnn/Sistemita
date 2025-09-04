@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /sistemagestion/public/
+
+    # Si la solicitud no es para un archivo existente...
+    RewriteCond %{REQUEST_FILENAME} !-f
+    # Y si no es para un directorio existente...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # ...entonces, reenvíala a index.php
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>

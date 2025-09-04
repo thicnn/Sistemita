@@ -1,0 +1,61 @@
+------------------------------------------------Clientes------------------------------------------------
+<div class="login-container">
+    <h2>Iniciar Sesión</h2>
+    <p>Bienvenido al Sistema de Gestión</p>
+    <form action="/sistemagestion/login" method="POST">
+        <div class="form-group">
+            <label for="email">Correo Electrónico:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Entrar</button>
+    </form>
+</div>
+<style>
+    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .main-container { padding: 0; }
+    .login-container { max-width: 400px; width: 100%; }
+    .login-container h2 { text-align: center; }
+    .login-container p { text-align: center; color: var(--dark-gray); margin-bottom: 25px;}
+</style>
+
+------------------------------------------------dashboard------------------------------------------------
+<style>
+    .production-queues { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .queue-column h3 { display: flex; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .status-circle { width: 15px; height: 15px; border-radius: 50%; margin-right: 10px; }
+    .status-circle.in-progress { background-color: #ffc107; } /* Amarillo */
+    .status-circle.ready { background-color: #28a745; } /* Verde */
+    .order-list { margin-top: 15px; }
+    .order-card { background-color: #f8f9fa; border: 1px solid #dee2e6; border-left: 5px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
+    .queue-column:last-child .order-card { border-left-color: #28a745; }
+    .order-card strong { font-size: 1.1em; }
+    .order-card p { margin: 5px 0; }
+    .order-card span { font-weight: bold; color: #333; }
+</style>
+------------------------------------------------Reports------------------------------------------------
+<style>
+    h2 { font-size: 28px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 30px; }
+    .report-section { margin-bottom: 40px; }
+    .report-section h3 { font-size: 20px; color: #333; margin-bottom: 20px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .report-card { background-color: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; }
+    a.report-card:hover { transform: translateY(-5px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .report-card h4 { margin-top: 0; margin-bottom: 10px; font-size: 16px; color: #6c757d; }
+    .report-card p.data-number { font-size: 2.2em; font-weight: 600; color: #007bff; margin: 0; }
+    .report-card small { color: #6c757d; }
+    .filter-form, .form-card form { display: flex; flex-direction: column; gap: 10px; }
+    .inline-form { flex-direction: row; align-items: center; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+    .filter-form { flex-direction: row; align-items: end; margin-bottom: 20px; background-color: #f8f9fa; padding: 15px; border-radius: 8px; flex-wrap: wrap; }
+    .main-filter { justify-content: center; font-size: 1.1em; }
+    .main-filter label { font-weight: bold; }
+    .status-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .provider-section .alert { background-color: #fff3cd; color: #856404; padding: 15px; border: 1px solid #ffeeba; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+    .report-card.wide-card { grid-column: 1 / -1; }
+    @media (min-width: 992px) { .report-card.wide-card { grid-column: span 2; } }
+    .table-container { max-height: 220px; overflow-y: auto; text-align: left; }
+    .action-btn.delete { background-color: #dc3545; color:white; border:none; border-radius:5px; padding: 5px 10px; cursor:pointer; }
+</style>
