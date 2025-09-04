@@ -482,67 +482,12 @@ class Report
     public function getSalesAndProfitEvolution($startDate, $endDate)
     {
         $endDate = $endDate . ' 23:59:59';
-        $query = "SELECT
-                    DATE(p.fecha_creacion) as dia,
-                    SUM(p.costo_total - p.descuento_total) as total_ventas,
-                    SUM(
-                        (p.costo_total - p.descuento_total) -
-                        SUM(
-                            CASE
-                                WHEN prod.tipo = 'Servicio' THEN 0
-                                WHEN prod.maquina_id = 1 THEN i.cantidad * (0.83 + CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END)
-                                WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
-                                ELSE 0
-                            END
-                        )
-                    ) as total_ganancia
-                FROM pedidos p
-                LEFT JOIN items_pedido i ON p.id = i.pedido_id
-                LEFT JOIN productos prod ON i.producto_id = prod.id
-                WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'
-                GROUP BY dia
-                ORDER BY dia ASC";
-
-        // The above query is complex and has nested SUMs which is not standard SQL.
-        // I will rewrite it to be more efficient and correct.
-
-        $sql = "SELECT
-                    DATE(p.fecha_creacion) as dia,
-                    (p.costo_total - p.descuento_total) as venta,
-                    (
-                        CASE
-                            WHEN prod.tipo = 'Servicio' THEN 0
-                            WHEN prod.maquina_id = 1 THEN i.cantidad * (0.83 + CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END)
-                            WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
-                            ELSE 0
-                        END
-                    ) as costo_item
-                FROM pedidos p
-                LEFT JOIN items_pedido i ON p.id = i.pedido_id
-                LEFT JOIN productos prod ON i.producto_id = prod.id
-                WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";
-
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param("ss", $startDate, $endDate);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-
-        $evolution = [];
-        foreach ($items as $item) {
-            $day = $item['dia'];
-            if (!isset($evolution[$day])) {
-                $evolution[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0];
-            }
-        }
-
-        // This is still not right. The venta is per order, but the cost is per item.
-        // I need to group by order first to get the total cost per order.
 
         $sql = "SELECT
                     p.id,
                     DATE(p.fecha_creacion) as dia,
                     p.costo_total as venta,
+                    COALESCE(p.descuento_total, 0) as descuento,
                     SUM(
                         CASE
                             WHEN prod.tipo = 'Servicio' THEN 0
@@ -557,6 +502,36 @@ class Report
                 WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'
                 GROUP BY p.id";
 
+        // Check if 'descuento_total' column exists
+        $has_descuento = false;
+        $result = $this->connection->query("SHOW COLUMNS FROM `pedidos` LIKE 'descuento_total'");
+        if ($result && $result->num_rows > 0) {
+            $has_descuento = true;
+        }
+
+        if (!$has_descuento) {
+            // Fallback for old schema: remove discount logic from the main query
+            $sql = "SELECT
+                        p.id,
+                        DATE(p.fecha_creacion) as dia,
+                        p.costo_total as venta,
+                        0 as descuento, -- Assume no discount
+                        SUM(
+                            CASE
+                                WHEN prod.tipo = 'Servicio' THEN 0
+                                WHEN prod.maquina_id = 1 THEN i.cantidad * (0.83 + CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END)
+                                WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
+                                ELSE 0
+                            END
+                        ) as costo_total_pedido
+                    FROM pedidos p
+                    LEFT JOIN items_pedido i ON p.id = i.pedido_id
+                    LEFT JOIN productos prod ON i.producto_id = prod.id
+                    WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'
+                    GROUP BY p.id";
+        }
+
+
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param("ss", $startDate, $endDate);
         $stmt->execute();
@@ -569,8 +544,9 @@ class Report
             if (!isset($evolutionData[$day])) {
                 $evolutionData[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0];
             }
-            $evolutionData[$day]['total_ventas'] += $order['venta'];
-            $evolutionData[$day]['total_ganancia'] += $order['venta'] - $order['costo_total_pedido'];
+            $venta_real = $order['venta'] - $order['descuento'];
+            $evolutionData[$day]['total_ventas'] += $venta_real;
+            $evolutionData[$day]['total_ganancia'] += $venta_real - $order['costo_total_pedido'];
         }
 
         // Sort by date
