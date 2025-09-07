@@ -62,6 +62,19 @@ class OrderController
         require_once '../views/layouts/footer.php';
     }
 
+    public function showQuickCreateForm()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /sistemagestion/login');
+            exit();
+        }
+
+        $products = $this->productModel->findAllAvailable();
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/orders/quick_create.php';
+        require_once '../views/layouts/footer.php';
+    }
+
     public function store()
     {
         if (!isset($_SESSION['user_id'])) {
@@ -69,9 +82,6 @@ class OrderController
             exit();
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $es_interno = isset($_POST['es_interno']) ? 1 : 0;
-            $es_error = isset($_POST['es_error']) ? 1 : 0;
-
             $success = $this->orderModel->create(
                 $_POST['cliente_id'],
                 $_SESSION['user_id'],
@@ -79,13 +89,47 @@ class OrderController
                 $_POST['notas'],
                 $_POST['items'] ?? [],
                 (float)($_POST['descuento_total'] ?? 0),
-                $es_interno,
-                $es_error
+                0, // es_interno
+                0 // es_error
             );
 
             $_SESSION['toast'] = $success
                 ? ['message' => '¡Pedido creado con éxito!', 'type' => 'success']
                 : ['message' => 'Error al crear el pedido.', 'type' => 'danger'];
+
+            header('Location: /sistemagestion/orders');
+            exit();
+        }
+    }
+
+    public function storeQuick()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /sistemagestion/login');
+            exit();
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $newOrderId = $this->orderModel->create(
+                null, // No client ID for quick orders
+                $_SESSION['user_id'],
+                $_POST['estado'],
+                $_POST['notas'],
+                $_POST['items'] ?? [],
+                (float)($_POST['descuento_total'] ?? 0),
+                0, // es_interno
+                0 // es_error
+            );
+
+            if ($newOrderId) {
+                if ($_POST['estado'] === 'Entregado') {
+                    $metodo_pago_final = $_POST['metodo_pago_final'] ?? 'Efectivo';
+                    $this->orderModel->settlePayment($newOrderId, $metodo_pago_final);
+                    $this->orderModel->addHistory($newOrderId, $_SESSION['user_id'], "Saldó la cuenta al crear como 'Entregado' con " . htmlspecialchars($metodo_pago_final) . ".");
+                }
+                $_SESSION['toast'] = ['message' => '¡Pedido rápido creado con éxito!', 'type' => 'success'];
+            } else {
+                $_SESSION['toast'] = ['message' => 'Error al crear el pedido rápido.', 'type' => 'danger'];
+            }
 
             header('Location: /sistemagestion/orders');
             exit();
@@ -166,13 +210,28 @@ class OrderController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $ordenActual = $this->orderModel->findByIdWithDetails($id);
-            $estadoAntiguo = $ordenActual['estado'];
+            if (!$ordenActual) {
+                header('Location: /sistemagestion/orders');
+                exit();
+            }
 
+            $estadoAntiguo = $ordenActual['estado'];
             $nuevoEstado = $_POST['estado'] ?? $estadoAntiguo;
-            $motivo_cancelacion = (!empty($_POST['motivo_cancelacion'])) ? $_POST['motivo_cancelacion'] : null;
+            $motivo_cancelacion = (!empty($_POST['motivo_cancelacion'])) ? trim($_POST['motivo_cancelacion']) : null;
 
             if ($motivo_cancelacion) {
                 $nuevoEstado = 'Cancelado';
+            }
+
+            // Server-side validation for status progression
+            $statusOrder = ["Solicitud" => 1, "Cotización" => 2, "Confirmado" => 3, "En curso" => 4, "Listo para entregar" => 5, "Entregado" => 6];
+            $valorEstadoAntiguo = $statusOrder[$estadoAntiguo] ?? 0;
+            $valorNuevoEstado = $statusOrder[$nuevoEstado] ?? 0;
+
+            if ($nuevoEstado !== 'Cancelado' && $valorNuevoEstado < $valorEstadoAntiguo) {
+                $_SESSION['toast'] = ['message' => 'Error: No se puede volver a un estado anterior.', 'type' => 'danger'];
+                header('Location: /sistemagestion/orders/show/' . $id);
+                exit();
             }
 
             if ($nuevoEstado !== $estadoAntiguo) {
@@ -189,9 +248,7 @@ class OrderController
                 $this->orderModel->addHistory($id, $_SESSION['user_id'], "Saldó la cuenta al marcar como 'Entregado' con " . htmlspecialchars($metodo_pago_final) . ".");
             }
 
-            $es_interno = isset($_POST['es_interno']) ? 1 : 0;
-
-            $this->orderModel->update($id, $nuevoEstado, $_POST['notas'], $motivo_cancelacion, $es_interno);
+            $this->orderModel->update($id, $nuevoEstado, $_POST['notas'], $motivo_cancelacion);
 
             $_SESSION['toast'] = ['message' => '¡Pedido actualizado!', 'type' => 'info'];
 

@@ -426,10 +426,15 @@ class Report
 
         $sql = "SELECT
                     p.id as pedido_id,
-                    c.nombre as cliente_nombre,
                     p.fecha_creacion,
-                    p.costo_total,
                     p.costo_total as total_final,
+                    p.estado,
+                    (
+                        SELECT GROUP_CONCAT(CONCAT_WS(':', metodo_pago, monto, fecha_pago) SEPARATOR ';')
+                        FROM pagos
+                        WHERE pedido_id = p.id
+                        ORDER BY fecha_pago ASC
+                    ) as pagos_registrados,
                     SUM(
                         CASE
                             WHEN prod.tipo = 'Servicio' THEN 0
@@ -437,9 +442,8 @@ class Report
                             WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
                             ELSE 0
                         END
-                    ) as costo_produccion
+                    ) as costo_pedido
                 FROM pedidos p
-                LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN items_pedido i ON p.id = i.pedido_id
                 LEFT JOIN productos prod ON i.producto_id = prod.id
                 WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";
@@ -457,7 +461,7 @@ class Report
         if (in_array($orderBy, $allowedOrderBy)) {
             if (strpos($orderBy, 'ganancia') !== false) {
                 // We need to order by the calculated profit
-                $sql .= " ORDER BY (total_final - costo_produccion) " . (strpos($orderBy, 'ASC') ? 'ASC' : 'DESC');
+                $sql .= " ORDER BY (total_final - costo_pedido) " . (strpos($orderBy, 'ASC') ? 'ASC' : 'DESC');
             } else {
                 $sql .= " ORDER BY " . $orderBy;
             }
@@ -473,7 +477,7 @@ class Report
 
         // Calculate profit for each sale
         foreach ($sales as &$sale) {
-            $sale['ganancia'] = $sale['total_final'] - $sale['costo_produccion'];
+            $sale['ganancia'] = $sale['total_final'] - $sale['costo_pedido'];
         }
 
         return $sales;
@@ -542,11 +546,13 @@ class Report
         foreach ($orders as $order) {
             $day = $order['dia'];
             if (!isset($evolutionData[$day])) {
-                $evolutionData[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0];
+                $evolutionData[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0, 'total_costo' => 0];
             }
             $venta_real = $order['venta'] - $order['descuento'];
+            $costo_pedido = (float) $order['costo_total_pedido'];
             $evolutionData[$day]['total_ventas'] += $venta_real;
-            $evolutionData[$day]['total_ganancia'] += $venta_real - $order['costo_total_pedido'];
+            $evolutionData[$day]['total_ganancia'] += $venta_real - $costo_pedido;
+            $evolutionData[$day]['total_costo'] += $costo_pedido;
         }
 
         // Sort by date
@@ -597,6 +603,175 @@ class Report
         $stmt->bind_param("ii", $limit, $offset);
         $stmt->execute();
         $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+    public function getWeeklyProductionData($startDate, $endDate)
+    {
+        $endDate = $endDate . ' 23:59:59';
+
+        $query = "SELECT
+                    p.id as pedido_id,
+                    DATE(p.fecha_creacion) as dia,
+                    p.costo_total as venta,
+                    (
+                        SELECT GROUP_CONCAT(CONCAT_WS(':', metodo_pago, monto) SEPARATOR ';')
+                        FROM pagos
+                        WHERE pedido_id = p.id
+                    ) as pagos_registrados,
+                    i.cantidad,
+                    prod.tipo,
+                    prod.descripcion,
+                    prod.maquina_id
+                  FROM pedidos p
+                  JOIN items_pedido i ON p.id = i.pedido_id
+                  JOIN productos prod ON i.producto_id = prod.id
+                  WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $weeklyData = [];
+        $currentDate = new DateTime($startDate);
+        $endDateObj = new DateTime($endDate);
+        while ($currentDate <= $endDateObj) {
+            $dayKey = $currentDate->format('Y-m-d');
+            $weeklyData[$dayKey] = [
+                'ventas' => 0, 'costos' => 0, 'ganancias' => 0,
+                'produccion' => ['bh227_bw' => 0, 'c454e_bw' => 0, 'c454e_color' => 0, 'servicios' => 0],
+                'pagos' => ['Efectivo' => 0, 'Débito' => 0, 'Crédito' => 0]
+            ];
+            $currentDate->modify('+1 day');
+        }
+
+        $pedidosProcesados = [];
+        foreach ($items as $item) {
+            $day = $item['dia'];
+            if (!isset($weeklyData[$day])) continue;
+
+            if (!in_array($item['pedido_id'], $pedidosProcesados)) {
+                $weeklyData[$day]['ventas'] += (float)$item['venta'];
+                if (!empty($item['pagos_registrados'])) {
+                    $pagos = explode(';', $item['pagos_registrados']);
+                    foreach ($pagos as $pago_str) {
+                        list($metodo, $monto) = array_pad(explode(':', $pago_str), 2, null);
+                        if (isset($weeklyData[$day]['pagos'][$metodo])) {
+                            $weeklyData[$day]['pagos'][$metodo] += (float)$monto;
+                        }
+                    }
+                }
+                $pedidosProcesados[] = $item['pedido_id'];
+            }
+
+            $costo_item = 0;
+            $cantidad = (int)$item['cantidad'];
+            if ($item['tipo'] === 'Servicio') {
+                $weeklyData[$day]['produccion']['servicios'] += $cantidad;
+            } else {
+                $costo_papel = (stripos($item['descripcion'], 'A4') !== false) ? 0.35 : 7.0;
+                $costo_impresion = 0;
+                if ($item['maquina_id'] == 1) { // BH-227
+                    $costo_impresion = 0.83;
+                    $weeklyData[$day]['produccion']['bh227_bw'] += $cantidad;
+                } elseif ($item['maquina_id'] == 2) { // C454e
+                    if (stripos($item['descripcion'], 'Color') !== false) {
+                        $costo_impresion = 10.0;
+                        $weeklyData[$day]['produccion']['c454e_color'] += $cantidad;
+                    } else {
+                        $costo_impresion = 2.3;
+                        $weeklyData[$day]['produccion']['c454e_bw'] += $cantidad;
+                    }
+                }
+                $costo_item = ($costo_impresion + $costo_papel) * $cantidad;
+            }
+            $weeklyData[$day]['costos'] += $costo_item;
+        }
+
+        foreach ($weeklyData as &$data) {
+            $data['ganancias'] = $data['ventas'] - $data['costos'];
+        }
+
+        return $weeklyData;
+    }
+    public function getSalesByDayForWeek($startDate, $endDate)
+    {
+        $endDate = $endDate . ' 23:59:59';
+        $query = "SELECT
+                    DAYOFWEEK(fecha_creacion) as day_of_week, -- 1=Sun, 2=Mon,...
+                    SUM(costo_total) as total_ventas,
+                    COUNT(id) as total_pedidos
+                  FROM pedidos
+                  WHERE fecha_creacion BETWEEN ? AND ? AND estado = 'Entregado'
+                  GROUP BY day_of_week";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // Re-key array by day of week (Monday=0, Sunday=6)
+        $dataByDay = array_fill(0, 7, ['total_ventas' => 0, 'total_pedidos' => 0]);
+        foreach($result as $row) {
+            $dayIndex = ($row['day_of_week'] + 5) % 7; // Adjust to make Monday index 0
+            $dataByDay[$dayIndex] = [
+                'total_ventas' => (float)$row['total_ventas'],
+                'total_pedidos' => (int)$row['total_pedidos']
+            ];
+        }
+        return $dataByDay;
+    }
+    public function getSalesDistributionForDay($date)
+    {
+        return $this->getSalesDistribution($date, $date);
+    }
+
+    public function getAccountBalances()
+    {
+        $total_pagos_query = "SELECT metodo_pago, SUM(monto) as total FROM pagos GROUP BY metodo_pago";
+        $total_pagos_result = $this->connection->query($total_pagos_query);
+        $total_pagos = $total_pagos_result ? $total_pagos_result->fetch_all(MYSQLI_ASSOC) : [];
+
+        $total_depositos_query = "SELECT tipo_cuenta, SUM(monto) as total FROM caja_historial GROUP BY tipo_cuenta";
+        $total_depositos_result = $this->connection->query($total_depositos_query);
+        $total_depositos = $total_depositos_result ? $total_depositos_result->fetch_all(MYSQLI_ASSOC) : [];
+
+        $balances = [
+            'efectivo' => 0,
+            'banco' => 0
+        ];
+
+        foreach ($total_pagos as $pago) {
+            if ($pago['metodo_pago'] === 'Efectivo') {
+                $balances['efectivo'] += $pago['total'];
+            } else {
+                $balances['banco'] += $pago['total'];
+            }
+        }
+
+        foreach ($total_depositos as $deposito) {
+            if ($deposito['tipo_cuenta'] === 'efectivo') {
+                $balances['efectivo'] -= $deposito['total'];
+            } else {
+                $balances['banco'] -= $deposito['total'];
+            }
+        }
+
+        return $balances;
+    }
+
+    public function createDeposit($fecha, $tipo_cuenta, $monto, $notas)
+    {
+        $query = "INSERT INTO caja_historial (fecha, tipo_cuenta, monto, notas) VALUES (?, ?, ?, ?)";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ssds", $fecha, $tipo_cuenta, $monto, $notas);
+        return $stmt->execute();
+    }
+
+    public function getDepositHistory()
+    {
+        $query = "SELECT * FROM caja_historial ORDER BY fecha DESC, id DESC";
+        $result = $this->connection->query($query);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 }

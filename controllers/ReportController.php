@@ -141,6 +141,63 @@ class ReportController
         require_once '../views/layouts/footer.php';
     }
 
+    public function weeklyProduction()
+    {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            header('Location: /sistemagestion/dashboard');
+            exit();
+        }
+
+        // Handle date selection
+        $selectedDate = $_GET['date'] ?? date('Y-m-d');
+        $dateTime = new DateTime($selectedDate);
+        $dayOfWeek = $dateTime->format('N'); // 1 (for Monday) through 7 (for Sunday)
+
+        // Calculate Monday of the selected week
+        $startOfWeek = clone $dateTime;
+        $startOfWeek->modify('-' . ($dayOfWeek - 1) . ' days');
+
+        // Calculate Sunday of the selected week
+        $endOfWeek = clone $startOfWeek;
+        $endOfWeek->modify('+6 days');
+
+        $startDate = $startOfWeek->format('Y-m-d');
+        $endDate = $endOfWeek->format('Y-m-d');
+
+        $weeklyData = $this->reportModel->getWeeklyProductionData($startDate, $endDate);
+
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/reports/weekly_production.php';
+        require_once '../views/layouts/footer.php';
+    }
+
+    public function weeklySalesComparison()
+    {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            header('Location: /sistemagestion/dashboard');
+            exit();
+        }
+
+        $selectedDate = $_GET['date'] ?? date('Y-m-d');
+        $dateTime = new DateTime($selectedDate);
+        $dayOfWeek = $dateTime->format('N');
+
+        // Current week
+        $startOfWeek = (clone $dateTime)->modify('-' . ($dayOfWeek - 1) . ' days');
+        $endOfWeek = (clone $startOfWeek)->modify('+6 days');
+
+        // Previous week
+        $startOfPrevWeek = (clone $startOfWeek)->modify('-7 days');
+        $endOfPrevWeek = (clone $startOfPrevWeek)->modify('+6 days');
+
+        $dataCurrentWeek = $this->reportModel->getSalesByDayForWeek($startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d'));
+        $dataPrevWeek = $this->reportModel->getSalesByDayForWeek($startOfPrevWeek->format('Y-m-d'), $endOfPrevWeek->format('Y-m-d'));
+
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/reports/weekly_sales_comparison.php';
+        require_once '../views/layouts/footer.php';
+    }
+
     public function orders()
     {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
@@ -331,6 +388,42 @@ class ReportController
             $_SESSION['toast'] = ['message' => 'Contador registrado con éxito.', 'type' => 'success'];
         }
         header('Location: /sistemagestion/reports/control');
+        exit();
+    }
+
+    public function reconciliation()
+    {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            header('Location: /sistemagestion/dashboard');
+            exit();
+        }
+
+        $selectedDate = $_GET['date'] ?? date('Y-m-d');
+
+        $salesDistribution = $this->reportModel->getSalesDistributionForDay($selectedDate);
+        $accountBalances = $this->reportModel->getAccountBalances();
+        $depositHistory = $this->reportModel->getDepositHistory();
+
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/reports/reconciliation.php';
+        require_once '../views/layouts/footer.php';
+    }
+
+    public function storeDeposit()
+    {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            exit('Acceso denegado');
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->reportModel->createDeposit(
+                $_POST['fecha'],
+                $_POST['tipo_cuenta'],
+                $_POST['monto'],
+                $_POST['notas']
+            );
+            $_SESSION['toast'] = ['message' => 'Depósito registrado con éxito.', 'type' => 'success'];
+        }
+        header('Location: /sistemagestion/reports/reconciliation');
         exit();
     }
 

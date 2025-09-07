@@ -137,6 +137,39 @@ $nombreMesSeleccionado = $mesesEnEspanol[$numeroMes] . ' de ' . $anio;
         </a>
     </div>
     <div class="col-lg-4 col-md-6">
+        <a href="/sistemagestion/reports/reconciliation" class="report-card-link">
+            <div class="card report-card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-bank fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Conciliación de Cuentas</h5>
+                    <p class="card-text">Registra y concilia tus cuentas de efectivo y banco.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <a href="/sistemagestion/reports/weekly_sales_comparison" class="report-card-link">
+            <div class="card report-card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-bar-chart-line-fill fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Comparativa Semanal</h5>
+                    <p class="card-text">Compara las ventas de dos semanas.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <a href="/sistemagestion/reports/weekly_production" class="report-card-link">
+            <div class="card report-card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-calendar-week fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Producción Semanal</h5>
+                    <p class="card-text">Análisis de producción y ventas por semana.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-4 col-md-6">
         <a href="/sistemagestion/reports/orders" class="report-card-link">
             <div class="card report-card text-center shadow-sm">
                 <div class="card-body">

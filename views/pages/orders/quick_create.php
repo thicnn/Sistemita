@@ -1,39 +1,48 @@
-<h2 class="mb-4">Crear Nuevo Pedido</h2>
+<h2 class="mb-4">Pedido Rápido</h2>
 
 <script>
     // Codifica los datos de los productos para que estén disponibles en JavaScript
     const productsData = <?php echo json_encode($products); ?>;
 </script>
 
-<form action="/sistemagestion/orders/create" method="POST" id="order-form">
+<form action="/sistemagestion/orders/store_quick" method="POST" id="order-form">
     <div class="card shadow-sm mb-4 animated-card">
         <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="bi bi-person-check-fill me-2"></i>1. Datos Principales</h5>
+            <h5 class="mb-0"><i class="bi bi-info-circle-fill me-2"></i>1. Datos del Pedido</h5>
         </div>
         <div class="card-body p-4">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label for="cliente_search" class="form-label">Buscar y Asociar Cliente</label>
-                    <div class="input-group">
-                        <input type="text" id="cliente_search" class="form-control dropdown-toggle" placeholder="Buscar por Nombre, Teléfono o Email..." data-bs-toggle="dropdown" autocomplete="off">
-                        <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#createClientModal">
-                            <i class="bi bi-person-plus-fill"></i>
-                        </button>
-                        <input type="hidden" name="cliente_id" id="cliente_id">
-                        <div id="search-results" class="dropdown-menu w-100"></div>
-                    </div>
-                    <div id="discount-alert-container" class="mt-2"></div>
-                </div>
-                <div class="col-md-6">
                     <label for="estado" class="form-label">Estado Inicial del Pedido</label>
                     <select name="estado" id="estado" class="form-select" required>
-                        <option value="Solicitud" selected>Solicitud</option>
+                        <option value="Solicitud">Solicitud</option>
                         <option value="Cotización">Cotización</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="En curso">En curso</option>
+                        <option value="Listo para entregar">Listo para entregar</option>
+                        <option value="Entregado">Entregado</option>
                     </select>
                 </div>
-                <div class="col-12">
+                <div class="col-md-6">
                     <label for="notas" class="form-label">Notas del Pedido (Opcional)</label>
-                    <textarea name="notas" id="notas" rows="2" class="form-control"></textarea>
+                    <textarea name="notas" id="notas" rows="1" class="form-control"></textarea>
+                </div>
+            </div>
+            <div id="pago-final-container" class="border-top pt-3 mt-4" style="display: none;">
+                 <div class="mb-3">
+                    <label class="form-label fw-bold">Método de Pago Final:</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="metodo_pago_final" id="pago_efectivo" value="Efectivo">
+                        <label class="form-check-label" for="pago_efectivo">Efectivo</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="metodo_pago_final" id="pago_debito" value="Débito">
+                        <label class="form-check-label" for="pago_debito">Débito</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="metodo_pago_final" id="pago_credito" value="Crédito">
+                        <label class="form-check-label" for="pago_credito">Crédito</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -118,60 +127,4 @@
     </div>
 </template>
 
-<style>
-    #search-results .dropdown-item {
-        white-space: normal;
-        cursor: pointer;
-    }
-
-    #search-results .client-name {
-        font-weight: 500;
-    }
-
-    #search-results .client-contact {
-        font-size: 0.9em;
-        color: var(--bs-secondary-color);
-    }
-</style>
-
-<!-- Modal para Crear Cliente -->
-<div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createClientModalLabel">Crear Nuevo Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="new-client-form">
-                    <div class="mb-3">
-                        <label for="new_client_nombre" class="form-label">Nombre Completo</label>
-                        <input type="text" id="new_client_nombre" name="nombre" class="form-control" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="new_client_telefono" class="form-label">Teléfono</label>
-                            <input type="tel" id="new_client_telefono" name="telefono" class="form-control">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="new_client_email" class="form-label">Correo Electrónico</label>
-                            <input type="email" id="new_client_email" name="email" class="form-control">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="new_client_notas" class="form-label">Notas</label>
-                        <textarea id="new_client_notas" name="notas" rows="3" class="form-control"></textarea>
-                    </div>
-                    <div id="new-client-error" class="alert alert-danger" style="display: none;"></div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="save-new-client-btn" class="btn btn-primary">Guardar Cliente</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/sistemagestion/public/js/order_form.js"></script>
+<script src="/sistemagestion/public/js/order_form_quick.js"></script>

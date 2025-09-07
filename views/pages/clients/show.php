@@ -49,6 +49,17 @@ function getStatusBadgeClass($status)
             </div>
         </div>
 
+        <?php if (!empty($client['notas'])): ?>
+        <div class="card shadow-sm animated-card mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Notas</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text"><?php echo nl2br(htmlspecialchars($client['notas'])); ?></p>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="card shadow-sm animated-card" style="animation-delay: 0.1s;">
             <div class="card-header bg-white d-flex align-items-center">
                 <i class="bi bi-star-fill me-2 text-warning"></i>

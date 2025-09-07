@@ -137,8 +137,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (p.descripcion !== desc || p.tipo !== tipoVal) {
                     return false;
                 }
+                // Para servicios, solo importa la descripción y el tipo.
+                // Para otros, también debe coincidir la máquina.
                 if (tipoVal === 'Servicio') {
-                    return p.maquina_nombre === 'N/A';
+                    return true;
                 } else {
                     return p.maquina_nombre === maquinaNombre;
                 }

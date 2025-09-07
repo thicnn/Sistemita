@@ -440,6 +440,24 @@ ALTER TABLE `proveedor_pagos`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Estructura de tabla para la tabla `caja_historial`
+--
+
+CREATE TABLE `caja_historial` (
+  `id` int(11) NOT NULL,
+  `fecha` date NOT NULL,
+  `tipo_cuenta` enum('efectivo','banco') NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `notas` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Indices de la tabla `caja_historial`
+--
+ALTER TABLE `caja_historial`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indices de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
@@ -521,6 +539,12 @@ ALTER TABLE `productos`
 --
 ALTER TABLE `proveedor_pagos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `caja_historial`
+--
+ALTER TABLE `caja_historial`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
