@@ -8,7 +8,6 @@ $saldoPendiente = $order['costo_total'] - $totalPagado;
     <h2 class="mb-0">Detalles del Pedido #<?php echo $order['id']; ?></h2>
     <div class="btn-group">
         <a href="/sistemagestion/pdf/quote/<?php echo $order['id']; ?>" class="btn btn-info" target="_blank"><i class="bi bi-file-earmark-pdf me-2"></i>Presupuesto</a>
-        <a href="/sistemagestion/pdf/receipt/<?php echo $order['id']; ?>" class="btn btn-success" target="_blank"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Recibo</a>
         <a href="/sistemagestion/orders/edit/<?php echo $order['id']; ?>" class="btn btn-primary"><i class="bi bi-pencil-fill me-2"></i>Editar</a>
         <a href="/sistemagestion/orders" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>Volver</a>
     </div>

@@ -57,8 +57,6 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
     if ($method === 'POST') $reportController->deleteProviderPayment((int)$matches[1]);
 } elseif (preg_match('#^pdf/quote/(\d+)$#', $url, $matches)) {
     $pdfController->generateQuote((int)$matches[1]);
-} elseif (preg_match('#^pdf/receipt/(\d+)$#', $url, $matches)) {
-    $pdfController->generateReceipt((int)$matches[1]);
 } else {
     // Si no es una ruta dinámica, usamos el switch para las rutas estáticas
     switch ($url) {
