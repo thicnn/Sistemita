@@ -27,14 +27,21 @@
                     <label for="notas" class="form-label">Notas del Pedido (Opcional)</label>
                     <textarea name="notas" id="notas" rows="1" class="form-control"></textarea>
                 </div>
-                <div class="col-12 mt-2">
-                    <div class="form-check form-switch d-inline-block me-3">
-                        <input class="form-check-input" type="checkbox" role="switch" id="es_interno" name="es_interno" value="1">
-                        <label class="form-check-label" for="es_interno">Marcar como Uso Interno</label>
+            </div>
+            <div id="pago-final-container" class="border-top pt-3 mt-4" style="display: none;">
+                 <div class="mb-3">
+                    <label class="form-label fw-bold">Método de Pago Final:</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="metodo_pago_final" id="pago_efectivo" value="Efectivo">
+                        <label class="form-check-label" for="pago_efectivo">Efectivo</label>
                     </div>
-                    <div class="form-check form-switch d-inline-block">
-                        <input class="form-check-input" type="checkbox" role="switch" id="es_error" name="es_error" value="1">
-                        <label class="form-check-label" for="es_error">Marcar como Error</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="metodo_pago_final" id="pago_debito" value="Débito">
+                        <label class="form-check-label" for="pago_debito">Débito</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="metodo_pago_final" id="pago_credito" value="Crédito">
+                        <label class="form-check-label" for="pago_credito">Crédito</label>
                     </div>
                 </div>
             </div>

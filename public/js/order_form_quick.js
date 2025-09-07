@@ -7,6 +7,35 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalPedidoSpan = document.getElementById('total-pedido');
     const submitButton = document.getElementById('submit-button');
     const descuentoTotalInput = document.getElementById('descuento-total');
+    const estadoSelect = document.getElementById('estado');
+    const pagoFinalContainer = document.getElementById('pago-final-container');
+    const pagoRadios = document.querySelectorAll('input[name="metodo_pago_final"]');
+
+    function togglePagoFinal() {
+        const esEntregado = estadoSelect.value === 'Entregado';
+        const total = parseFloat(totalPedidoSpan.textContent);
+
+        if (esEntregado && total > 0) {
+            pagoFinalContainer.style.display = 'block';
+            pagoRadios.forEach(radio => radio.required = true);
+            if (!document.querySelector('input[name="metodo_pago_final"]:checked')) {
+                document.getElementById('pago_efectivo').checked = true;
+            }
+        } else {
+            pagoFinalContainer.style.display = 'none';
+            pagoRadios.forEach(radio => {
+                radio.required = false;
+                radio.checked = false;
+            });
+        }
+    }
+
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', togglePagoFinal);
+    }
+
+    const observer = new MutationObserver(togglePagoFinal);
+    observer.observe(totalPedidoSpan, { childList: true, subtree: true });
 
     // --- LÓGICA DE ÍTEMS Y CÁLCULOS ---
     const populateSelect = (select, options) => {

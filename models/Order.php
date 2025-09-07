@@ -273,14 +273,15 @@ class Order
         return true;
     }
 
-    public function update($id, $estado, $notas, $motivo_cancelacion, $es_interno)
+    public function update($id, $estado, $notas, $motivo_cancelacion)
     {
         if ($motivo_cancelacion !== null) {
             $estado = 'Cancelado';
         }
-        $query = "UPDATE " . $this->table_name . " SET estado = ?, notas_internas = ?, motivo_cancelacion = ?, es_interno = ? WHERE id = ?";
+        // El campo es_interno ya no se modifica desde el flujo de edición normal.
+        $query = "UPDATE " . $this->table_name . " SET estado = ?, notas_internas = ?, motivo_cancelacion = ? WHERE id = ?";
         $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("sssii", $estado, $notas, $motivo_cancelacion, $es_interno, $id);
+        $stmt->bind_param("sssi", $estado, $notas, $motivo_cancelacion, $id);
         return $stmt->execute();
     }
 
@@ -354,7 +355,7 @@ class Order
             }
 
             $this->connection->commit();
-            return true;
+            return $pedido_id;
         } catch (Exception $e) {
             $this->connection->rollback();
             error_log("Error al crear pedido: " . $e->getMessage());

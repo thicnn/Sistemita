@@ -613,6 +613,11 @@ class Report
                     p.id as pedido_id,
                     DATE(p.fecha_creacion) as dia,
                     p.costo_total as venta,
+                    (
+                        SELECT GROUP_CONCAT(CONCAT_WS(':', metodo_pago, monto) SEPARATOR ';')
+                        FROM pagos
+                        WHERE pedido_id = p.id
+                    ) as pagos_registrados,
                     i.cantidad,
                     prod.tipo,
                     prod.descripcion,
@@ -628,67 +633,145 @@ class Report
         $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
         $weeklyData = [];
-
-        // Initialize days of the week
         $currentDate = new DateTime($startDate);
         $endDateObj = new DateTime($endDate);
         while ($currentDate <= $endDateObj) {
             $dayKey = $currentDate->format('Y-m-d');
             $weeklyData[$dayKey] = [
-                'ventas' => 0,
-                'costos' => 0,
-                'ganancias' => 0,
-                'produccion' => []
+                'ventas' => 0, 'costos' => 0, 'ganancias' => 0,
+                'produccion' => ['bh227_bw' => 0, 'c454e_bw' => 0, 'c454e_color' => 0, 'servicios' => 0],
+                'pagos' => ['Efectivo' => 0, 'Débito' => 0, 'Crédito' => 0]
             ];
             $currentDate->modify('+1 day');
         }
 
-        // Process items
         $pedidosProcesados = [];
         foreach ($items as $item) {
             $day = $item['dia'];
+            if (!isset($weeklyData[$day])) continue;
 
-            // Sum sales only once per order
             if (!in_array($item['pedido_id'], $pedidosProcesados)) {
-                 $weeklyData[$day]['ventas'] += (float)$item['venta'];
-                 $pedidosProcesados[] = $item['pedido_id'];
+                $weeklyData[$day]['ventas'] += (float)$item['venta'];
+                if (!empty($item['pagos_registrados'])) {
+                    $pagos = explode(';', $item['pagos_registrados']);
+                    foreach ($pagos as $pago_str) {
+                        list($metodo, $monto) = array_pad(explode(':', $pago_str), 2, null);
+                        if (isset($weeklyData[$day]['pagos'][$metodo])) {
+                            $weeklyData[$day]['pagos'][$metodo] += (float)$monto;
+                        }
+                    }
+                }
+                $pedidosProcesados[] = $item['pedido_id'];
             }
 
-            // Calculate and sum costs
             $costo_item = 0;
-            if ($item['tipo'] !== 'Servicio') {
-                $cantidad = (int)$item['cantidad'];
+            $cantidad = (int)$item['cantidad'];
+            if ($item['tipo'] === 'Servicio') {
+                $weeklyData[$day]['produccion']['servicios'] += $cantidad;
+            } else {
                 $costo_papel = (stripos($item['descripcion'], 'A4') !== false) ? 0.35 : 7.0;
                 $costo_impresion = 0;
-
                 if ($item['maquina_id'] == 1) { // BH-227
                     $costo_impresion = 0.83;
+                    $weeklyData[$day]['produccion']['bh227_bw'] += $cantidad;
                 } elseif ($item['maquina_id'] == 2) { // C454e
                     if (stripos($item['descripcion'], 'Color') !== false) {
                         $costo_impresion = 10.0;
+                        $weeklyData[$day]['produccion']['c454e_color'] += $cantidad;
                     } else {
                         $costo_impresion = 2.3;
+                        $weeklyData[$day]['produccion']['c454e_bw'] += $cantidad;
                     }
                 }
                 $costo_item = ($costo_impresion + $costo_papel) * $cantidad;
             }
             $weeklyData[$day]['costos'] += $costo_item;
-
-            // Sum production by type
-            $tipo_produccion = $item['tipo'];
-            if (!isset($weeklyData[$day]['produccion'][$tipo_produccion])) {
-                $weeklyData[$day]['produccion'][$tipo_produccion] = 0;
-            }
-            $weeklyData[$day]['produccion'][$tipo_produccion] += (int)$item['cantidad'];
         }
 
-        // Calculate profits
-        foreach ($weeklyData as $day => &$data) {
-            if ($data['ventas'] > 0 || $data['costos'] > 0) {
-                $data['ganancias'] = $data['ventas'] - $data['costos'];
-            }
+        foreach ($weeklyData as &$data) {
+            $data['ganancias'] = $data['ventas'] - $data['costos'];
         }
 
         return $weeklyData;
+    }
+    public function getSalesByDayForWeek($startDate, $endDate)
+    {
+        $endDate = $endDate . ' 23:59:59';
+        $query = "SELECT
+                    DAYOFWEEK(fecha_creacion) as day_of_week, -- 1=Sun, 2=Mon,...
+                    SUM(costo_total) as total_ventas,
+                    COUNT(id) as total_pedidos
+                  FROM pedidos
+                  WHERE fecha_creacion BETWEEN ? AND ? AND estado = 'Entregado'
+                  GROUP BY day_of_week";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // Re-key array by day of week (Monday=0, Sunday=6)
+        $dataByDay = array_fill(0, 7, ['total_ventas' => 0, 'total_pedidos' => 0]);
+        foreach($result as $row) {
+            $dayIndex = ($row['day_of_week'] + 5) % 7; // Adjust to make Monday index 0
+            $dataByDay[$dayIndex] = [
+                'total_ventas' => (float)$row['total_ventas'],
+                'total_pedidos' => (int)$row['total_pedidos']
+            ];
+        }
+        return $dataByDay;
+    }
+    public function getSalesDistributionForDay($date)
+    {
+        return $this->getSalesDistribution($date, $date);
+    }
+
+    public function getAccountBalances()
+    {
+        $total_pagos_query = "SELECT metodo_pago, SUM(monto) as total FROM pagos GROUP BY metodo_pago";
+        $total_pagos_result = $this->connection->query($total_pagos_query);
+        $total_pagos = $total_pagos_result ? $total_pagos_result->fetch_all(MYSQLI_ASSOC) : [];
+
+        $total_depositos_query = "SELECT tipo_cuenta, SUM(monto) as total FROM caja_historial GROUP BY tipo_cuenta";
+        $total_depositos_result = $this->connection->query($total_depositos_query);
+        $total_depositos = $total_depositos_result ? $total_depositos_result->fetch_all(MYSQLI_ASSOC) : [];
+
+        $balances = [
+            'efectivo' => 0,
+            'banco' => 0
+        ];
+
+        foreach ($total_pagos as $pago) {
+            if ($pago['metodo_pago'] === 'Efectivo') {
+                $balances['efectivo'] += $pago['total'];
+            } else {
+                $balances['banco'] += $pago['total'];
+            }
+        }
+
+        foreach ($total_depositos as $deposito) {
+            if ($deposito['tipo_cuenta'] === 'efectivo') {
+                $balances['efectivo'] -= $deposito['total'];
+            } else {
+                $balances['banco'] -= $deposito['total'];
+            }
+        }
+
+        return $balances;
+    }
+
+    public function createDeposit($fecha, $tipo_cuenta, $monto, $notas)
+    {
+        $query = "INSERT INTO caja_historial (fecha, tipo_cuenta, monto, notas) VALUES (?, ?, ?, ?)";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ssds", $fecha, $tipo_cuenta, $monto, $notas);
+        return $stmt->execute();
+    }
+
+    public function getDepositHistory()
+    {
+        $query = "SELECT * FROM caja_historial ORDER BY fecha DESC, id DESC";
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 }

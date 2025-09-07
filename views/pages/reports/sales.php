@@ -120,29 +120,27 @@
                                 <td class="text-end text-success fw-bold">$<?php echo number_format($sale['ganancia'], 2); ?></td>
                                 <td>
                                     <?php if (!empty($sale['pagos_registrados'])): ?>
-                                        <?php
-                                        $pagos = explode(';', $sale['pagos_registrados']);
-                                        $ultimoPago = end($pagos);
-                                        // Use array destructuring with null coalesce operator for safety
-                                        list($metodo, $monto, $fecha) = array_pad(explode(':', $ultimoPago), 3, null);
-                                        ?>
-                                        <span class="badge bg-light text-dark border">
-                                            <i class="bi bi-check-circle-fill text-success"></i>
-                                            <?php echo htmlspecialchars($metodo ?? 'N/A'); ?>
-                                        </span>
+                                        <ul class="list-unstyled mb-0 small">
+                                            <?php
+                                            $pagos = explode(';', $sale['pagos_registrados']);
+                                            $totalPagos = count($pagos);
+                                            foreach ($pagos as $index => $pago_str):
+                                                list($metodo, $monto, $fecha) = array_pad(explode(':', $pago_str), 3, null);
 
-                                        <?php if (count($pagos) > 1): ?>
-                                            <ul class="list-unstyled mt-1 mb-0 small text-muted">
-                                            <?php for ($i = 0; $i < count($pagos) - 1; $i++): ?>
-                                                <?php list($metodo_prev, $monto_prev, $fecha_prev) = array_pad(explode(':', $pagos[$i]), 3, null); ?>
+                                                $label = 'Pago';
+                                                if ($totalPagos > 1) {
+                                                    $label = ($index === $totalPagos - 1) ? 'Saldo' : 'Seña';
+                                                }
+                                            ?>
                                                 <li>
-                                                    <i class="bi bi-dot"></i>
-                                                    <?php echo htmlspecialchars($metodo_prev ?? 'N/A'); ?>: $<?php echo number_format((float)($monto_prev ?? 0), 2); ?>
+                                                    <strong><?php echo $label; ?>:</strong>
+                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis border ms-1 me-1">
+                                                        <?php echo htmlspecialchars($metodo ?? 'N/A'); ?>
+                                                    </span>
+                                                    $<?php echo number_format((float)($monto ?? 0), 2); ?>
                                                 </li>
-                                            <?php endfor; ?>
-                                            </ul>
-                                        <?php endif; ?>
-
+                                            <?php endforeach; ?>
+                                        </ul>
                                     <?php else: ?>
                                         <span class="text-muted">Sin pagos</span>
                                     <?php endif; ?>

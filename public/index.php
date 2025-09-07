@@ -110,11 +110,20 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
         case 'reports/weekly_production':
             $reportController->weeklyProduction();
             break;
+        case 'reports/weekly_sales_comparison':
+            $reportController->weeklySalesComparison();
+            break;
         case 'reports/orders':
             $reportController->orders();
             break;
         case 'reports/control':
             $reportController->control();
+            break;
+        case 'reports/reconciliation':
+            $reportController->reconciliation();
+            break;
+        case 'reports/store_deposit':
+            if ($method === 'POST') $reportController->storeDeposit();
             break;
         case 'reports/products':
             $reportController->products();
