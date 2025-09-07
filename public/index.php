@@ -85,6 +85,12 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
         case 'orders/create':
             ($method === 'POST') ? $orderController->store() : $orderController->showCreateForm();
             break;
+        case 'orders/quick_create':
+            $orderController->showQuickCreateForm();
+            break;
+        case 'orders/store_quick':
+            if ($method === 'POST') $orderController->storeQuick();
+            break;
 
         // Errores
         case 'errors/create':
@@ -100,6 +106,9 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
             break;
         case 'reports/sales':
             $reportController->sales();
+            break;
+        case 'reports/weekly_production':
+            $reportController->weeklyProduction();
             break;
         case 'reports/orders':
             $reportController->orders();

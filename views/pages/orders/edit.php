@@ -11,12 +11,29 @@
                     </div>
                     <div class="mb-3">
                         <label for="estado" class="form-label">Cambiar Estado:</label>
-                        <select name="estado" id="estado" class="form-select" required <?php echo $order['estado'] === 'Cancelado' ? 'disabled' : ''; ?>>
+                        <select name="estado" id="estado" class="form-select" required <?php echo $order['estado'] === 'Cancelado' || $order['estado'] === 'Entregado' ? 'disabled' : ''; ?>>
                             <?php
-                            $estados = ["Solicitud", "Cotización", "Confirmado", "En Curso", "Listo para Retirar", "Entregado"];
-                            foreach ($estados as $estado) {
-                                $selected = ($order['estado'] == $estado) ? 'selected' : '';
-                                echo "<option value='{$estado}' {$selected}>{$estado}</option>";
+                            $statusOrder = [
+                                "Solicitud" => 1,
+                                "Cotización" => 2,
+                                "Confirmado" => 3,
+                                "En curso" => 4,
+                                "Listo para entregar" => 5,
+                                "Entregado" => 6
+                            ];
+                            $estados = ["Solicitud", "Cotización", "Confirmado", "En curso", "Listo para entregar", "Entregado"];
+
+                            if ($order['estado'] === 'Cancelado') {
+                                echo "<option value='Cancelado' selected disabled>Cancelado</option>";
+                            } else {
+                                $currentStatusValue = $statusOrder[$order['estado']] ?? 0;
+
+                                foreach ($estados as $estado) {
+                                    $optionStatusValue = $statusOrder[$estado];
+                                    $selected = ($order['estado'] == $estado) ? 'selected' : '';
+                                    $disabled = ($optionStatusValue < $currentStatusValue) ? 'disabled' : '';
+                                    echo "<option value='{$estado}' {$selected} {$disabled}>{$estado}</option>";
+                                }
                             }
                             ?>
                         </select>

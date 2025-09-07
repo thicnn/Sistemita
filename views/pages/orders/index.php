@@ -33,9 +33,14 @@ $estados = ["Solicitud", "Cotización", "Confirmado", "En Curso", "Listo para Re
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <h2 class="mb-0">Gestión de Pedidos</h2>
-    <a href="/sistemagestion/orders/create" class="btn btn-primary">
-        <i class="bi bi-plus-circle-fill me-2"></i>Crear Nuevo Pedido
-    </a>
+    <div class="d-flex gap-2">
+        <a href="/sistemagestion/orders/quick_create" class="btn btn-secondary">
+            <i class="bi bi-lightning-fill me-2"></i>Pedido Rápido
+        </a>
+        <a href="/sistemagestion/orders/create" class="btn btn-primary">
+            <i class="bi bi-plus-circle-fill me-2"></i>Crear Nuevo Pedido
+        </a>
+    </div>
 </div>
 
 <div class="card shadow-sm mb-4 animated-card">

@@ -62,6 +62,19 @@ class OrderController
         require_once '../views/layouts/footer.php';
     }
 
+    public function showQuickCreateForm()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /sistemagestion/login');
+            exit();
+        }
+
+        $products = $this->productModel->findAllAvailable();
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/orders/quick_create.php';
+        require_once '../views/layouts/footer.php';
+    }
+
     public function store()
     {
         if (!isset($_SESSION['user_id'])) {
@@ -86,6 +99,36 @@ class OrderController
             $_SESSION['toast'] = $success
                 ? ['message' => '¡Pedido creado con éxito!', 'type' => 'success']
                 : ['message' => 'Error al crear el pedido.', 'type' => 'danger'];
+
+            header('Location: /sistemagestion/orders');
+            exit();
+        }
+    }
+
+    public function storeQuick()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /sistemagestion/login');
+            exit();
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $es_interno = isset($_POST['es_interno']) ? 1 : 0;
+            $es_error = isset($_POST['es_error']) ? 1 : 0;
+
+            $success = $this->orderModel->create(
+                null, // No client ID for quick orders
+                $_SESSION['user_id'],
+                $_POST['estado'],
+                $_POST['notas'],
+                $_POST['items'] ?? [],
+                (float)($_POST['descuento_total'] ?? 0),
+                $es_interno,
+                $es_error
+            );
+
+            $_SESSION['toast'] = $success
+                ? ['message' => '¡Pedido rápido creado con éxito!', 'type' => 'success']
+                : ['message' => 'Error al crear el pedido rápido.', 'type' => 'danger'];
 
             header('Location: /sistemagestion/orders');
             exit();

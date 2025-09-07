@@ -98,25 +98,55 @@
                 <thead>
                     <tr>
                         <th>ID Pedido</th>
-                        <th>Cliente</th>
                         <th>Fecha</th>
-                        <th class="text-end">Total Final</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Costo</th>
                         <th class="text-end">Ganancia</th>
+                        <th>Pagos Registrados</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($sales)): ?>
                         <tr>
-                            <td colspan="5" class="text-center text-muted p-4">No se encontraron ventas para los filtros seleccionados.</td>
+                            <td colspan="6" class="text-center text-muted p-4">No se encontraron ventas para los filtros seleccionados.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($sales as $sale): ?>
                             <tr>
                                 <td><a href="/sistemagestion/orders/show/<?php echo $sale['pedido_id']; ?>">#<?php echo $sale['pedido_id']; ?></a></td>
-                                <td><?php echo htmlspecialchars($sale['cliente_nombre'] ?? 'Cliente no encontrado'); ?></td>
                                 <td><?php echo date('d/m/Y', strtotime($sale['fecha_creacion'])); ?></td>
                                 <td class="text-end fw-bold">$<?php echo number_format($sale['total_final'], 2); ?></td>
+                                <td class="text-end text-danger">$<?php echo number_format($sale['costo_pedido'], 2); ?></td>
                                 <td class="text-end text-success fw-bold">$<?php echo number_format($sale['ganancia'], 2); ?></td>
+                                <td>
+                                    <?php if (!empty($sale['pagos_registrados'])): ?>
+                                        <?php
+                                        $pagos = explode(';', $sale['pagos_registrados']);
+                                        $ultimoPago = end($pagos);
+                                        // Use array destructuring with null coalesce operator for safety
+                                        list($metodo, $monto, $fecha) = array_pad(explode(':', $ultimoPago), 3, null);
+                                        ?>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                            <?php echo htmlspecialchars($metodo ?? 'N/A'); ?>
+                                        </span>
+
+                                        <?php if (count($pagos) > 1): ?>
+                                            <ul class="list-unstyled mt-1 mb-0 small text-muted">
+                                            <?php for ($i = 0; $i < count($pagos) - 1; $i++): ?>
+                                                <?php list($metodo_prev, $monto_prev, $fecha_prev) = array_pad(explode(':', $pagos[$i]), 3, null); ?>
+                                                <li>
+                                                    <i class="bi bi-dot"></i>
+                                                    <?php echo htmlspecialchars($metodo_prev ?? 'N/A'); ?>: $<?php echo number_format((float)($monto_prev ?? 0), 2); ?>
+                                                </li>
+                                            <?php endfor; ?>
+                                            </ul>
+                                        <?php endif; ?>
+
+                                    <?php else: ?>
+                                        <span class="text-muted">Sin pagos</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -134,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const evolutionLabels = evolutionData.map(d => new Date(d.dia).toLocaleDateString('es-ES'));
         const salesValues = evolutionData.map(d => d.total_ventas);
         const profitValues = evolutionData.map(d => d.total_ganancia);
+        const costValues = evolutionData.map(d => d.total_costo);
 
         new Chart(evolutionCtx, {
             type: 'line',
@@ -153,6 +184,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         data: profitValues,
                         borderColor: 'rgba(25, 135, 84, 1)',
                         backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        fill: true,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Costos',
+                        data: costValues,
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
                         fill: true,
                         yAxisID: 'y',
                     }

@@ -141,6 +141,36 @@ class ReportController
         require_once '../views/layouts/footer.php';
     }
 
+    public function weeklyProduction()
+    {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            header('Location: /sistemagestion/dashboard');
+            exit();
+        }
+
+        // Handle date selection
+        $selectedDate = $_GET['date'] ?? date('Y-m-d');
+        $dateTime = new DateTime($selectedDate);
+        $dayOfWeek = $dateTime->format('N'); // 1 (for Monday) through 7 (for Sunday)
+
+        // Calculate Monday of the selected week
+        $startOfWeek = clone $dateTime;
+        $startOfWeek->modify('-' . ($dayOfWeek - 1) . ' days');
+
+        // Calculate Sunday of the selected week
+        $endOfWeek = clone $startOfWeek;
+        $endOfWeek->modify('+6 days');
+
+        $startDate = $startOfWeek->format('Y-m-d');
+        $endDate = $endOfWeek->format('Y-m-d');
+
+        $weeklyData = $this->reportModel->getWeeklyProductionData($startDate, $endDate);
+
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/reports/weekly_production.php';
+        require_once '../views/layouts/footer.php';
+    }
+
     public function orders()
     {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {

@@ -426,10 +426,15 @@ class Report
 
         $sql = "SELECT
                     p.id as pedido_id,
-                    c.nombre as cliente_nombre,
                     p.fecha_creacion,
-                    p.costo_total,
                     p.costo_total as total_final,
+                    p.estado,
+                    (
+                        SELECT GROUP_CONCAT(CONCAT_WS(':', metodo_pago, monto, fecha_pago) SEPARATOR ';')
+                        FROM pagos
+                        WHERE pedido_id = p.id
+                        ORDER BY fecha_pago ASC
+                    ) as pagos_registrados,
                     SUM(
                         CASE
                             WHEN prod.tipo = 'Servicio' THEN 0
@@ -437,9 +442,8 @@ class Report
                             WHEN prod.maquina_id = 2 THEN i.cantidad * ((CASE WHEN prod.descripcion LIKE '%Color%' THEN 10.0 ELSE 2.3 END) + (CASE WHEN prod.descripcion LIKE '%A4%' THEN 0.35 ELSE 7.0 END))
                             ELSE 0
                         END
-                    ) as costo_produccion
+                    ) as costo_pedido
                 FROM pedidos p
-                LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN items_pedido i ON p.id = i.pedido_id
                 LEFT JOIN productos prod ON i.producto_id = prod.id
                 WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";
@@ -457,7 +461,7 @@ class Report
         if (in_array($orderBy, $allowedOrderBy)) {
             if (strpos($orderBy, 'ganancia') !== false) {
                 // We need to order by the calculated profit
-                $sql .= " ORDER BY (total_final - costo_produccion) " . (strpos($orderBy, 'ASC') ? 'ASC' : 'DESC');
+                $sql .= " ORDER BY (total_final - costo_pedido) " . (strpos($orderBy, 'ASC') ? 'ASC' : 'DESC');
             } else {
                 $sql .= " ORDER BY " . $orderBy;
             }
@@ -473,7 +477,7 @@ class Report
 
         // Calculate profit for each sale
         foreach ($sales as &$sale) {
-            $sale['ganancia'] = $sale['total_final'] - $sale['costo_produccion'];
+            $sale['ganancia'] = $sale['total_final'] - $sale['costo_pedido'];
         }
 
         return $sales;
@@ -542,11 +546,13 @@ class Report
         foreach ($orders as $order) {
             $day = $order['dia'];
             if (!isset($evolutionData[$day])) {
-                $evolutionData[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0];
+                $evolutionData[$day] = ['dia' => $day, 'total_ventas' => 0, 'total_ganancia' => 0, 'total_costo' => 0];
             }
             $venta_real = $order['venta'] - $order['descuento'];
+            $costo_pedido = (float) $order['costo_total_pedido'];
             $evolutionData[$day]['total_ventas'] += $venta_real;
-            $evolutionData[$day]['total_ganancia'] += $venta_real - $order['costo_total_pedido'];
+            $evolutionData[$day]['total_ganancia'] += $venta_real - $costo_pedido;
+            $evolutionData[$day]['total_costo'] += $costo_pedido;
         }
 
         // Sort by date
@@ -598,5 +604,91 @@ class Report
         $stmt->execute();
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+    public function getWeeklyProductionData($startDate, $endDate)
+    {
+        $endDate = $endDate . ' 23:59:59';
+
+        $query = "SELECT
+                    p.id as pedido_id,
+                    DATE(p.fecha_creacion) as dia,
+                    p.costo_total as venta,
+                    i.cantidad,
+                    prod.tipo,
+                    prod.descripcion,
+                    prod.maquina_id
+                  FROM pedidos p
+                  JOIN items_pedido i ON p.id = i.pedido_id
+                  JOIN productos prod ON i.producto_id = prod.id
+                  WHERE p.fecha_creacion BETWEEN ? AND ? AND p.estado = 'Entregado'";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $weeklyData = [];
+
+        // Initialize days of the week
+        $currentDate = new DateTime($startDate);
+        $endDateObj = new DateTime($endDate);
+        while ($currentDate <= $endDateObj) {
+            $dayKey = $currentDate->format('Y-m-d');
+            $weeklyData[$dayKey] = [
+                'ventas' => 0,
+                'costos' => 0,
+                'ganancias' => 0,
+                'produccion' => []
+            ];
+            $currentDate->modify('+1 day');
+        }
+
+        // Process items
+        $pedidosProcesados = [];
+        foreach ($items as $item) {
+            $day = $item['dia'];
+
+            // Sum sales only once per order
+            if (!in_array($item['pedido_id'], $pedidosProcesados)) {
+                 $weeklyData[$day]['ventas'] += (float)$item['venta'];
+                 $pedidosProcesados[] = $item['pedido_id'];
+            }
+
+            // Calculate and sum costs
+            $costo_item = 0;
+            if ($item['tipo'] !== 'Servicio') {
+                $cantidad = (int)$item['cantidad'];
+                $costo_papel = (stripos($item['descripcion'], 'A4') !== false) ? 0.35 : 7.0;
+                $costo_impresion = 0;
+
+                if ($item['maquina_id'] == 1) { // BH-227
+                    $costo_impresion = 0.83;
+                } elseif ($item['maquina_id'] == 2) { // C454e
+                    if (stripos($item['descripcion'], 'Color') !== false) {
+                        $costo_impresion = 10.0;
+                    } else {
+                        $costo_impresion = 2.3;
+                    }
+                }
+                $costo_item = ($costo_impresion + $costo_papel) * $cantidad;
+            }
+            $weeklyData[$day]['costos'] += $costo_item;
+
+            // Sum production by type
+            $tipo_produccion = $item['tipo'];
+            if (!isset($weeklyData[$day]['produccion'][$tipo_produccion])) {
+                $weeklyData[$day]['produccion'][$tipo_produccion] = 0;
+            }
+            $weeklyData[$day]['produccion'][$tipo_produccion] += (int)$item['cantidad'];
+        }
+
+        // Calculate profits
+        foreach ($weeklyData as $day => &$data) {
+            if ($data['ventas'] > 0 || $data['costos'] > 0) {
+                $data['ganancias'] = $data['ventas'] - $data['costos'];
+            }
+        }
+
+        return $weeklyData;
     }
 }
