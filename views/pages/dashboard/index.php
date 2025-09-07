@@ -1,19 +1,3 @@
-<?php
-// Función auxiliar para los badges
-function getStatusBadgeClass($status)
-{
-    $map = [
-        'Entregado' => 'bg-success-subtle text-success-emphasis border border-success-subtle',
-        'Listo para Retirar' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
-        'En Curso' => 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
-        'Confirmado' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
-        'Cancelado' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
-        'Solicitud' => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle',
-        'Cotización' => 'bg-light text-dark border'
-    ];
-    return $map[$status] ?? 'bg-dark';
-}
-?>
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
