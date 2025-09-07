@@ -4,6 +4,9 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Carga de archivos esenciales
+if (file_exists('../vendor/autoload.php')) {
+    require_once '../vendor/autoload.php';
+}
 require_once '../config/database.php';
 require_once '../core/helpers.php';
 require_once '../controllers/AuthController.php';
@@ -12,6 +15,7 @@ require_once '../controllers/OrderController.php';
 require_once '../controllers/ReportController.php';
 require_once '../controllers/AdminController.php';
 require_once '../controllers/ErrorController.php';
+require_once '../controllers/PdfController.php';
 
 // Creación de instancias de los controladores
 $authController = new AuthController($connection);
@@ -20,6 +24,7 @@ $orderController = new OrderController($connection);
 $reportController = new ReportController($connection);
 $adminController = new AdminController($connection);
 $errorController = new ErrorController($connection);
+$pdfController = new PdfController($connection);
 
 $url = $_GET['url'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -50,6 +55,10 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
     $reportController->showStatusDetails(urldecode($matches[1]));
 } elseif (preg_match('#^reports/delete_payment/(\d+)$#', $url, $matches)) {
     if ($method === 'POST') $reportController->deleteProviderPayment((int)$matches[1]);
+} elseif (preg_match('#^pdf/quote/(\d+)$#', $url, $matches)) {
+    $pdfController->generateQuote((int)$matches[1]);
+} elseif (preg_match('#^pdf/receipt/(\d+)$#', $url, $matches)) {
+    $pdfController->generateReceipt((int)$matches[1]);
 } else {
     // Si no es una ruta dinámica, usamos el switch para las rutas estáticas
     switch ($url) {
