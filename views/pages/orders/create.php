@@ -15,12 +15,10 @@
                 <div class="col-md-6">
                     <label for="cliente_search" class="form-label">Buscar y Asociar Cliente</label>
                     <div class="input-group">
-                        <input type="text" id="cliente_search" class="form-control dropdown-toggle" placeholder="Buscar por Nombre, Teléfono o Email..." data-bs-toggle="dropdown" autocomplete="off">
+                        <select id="cliente_search" name="cliente_id" placeholder="Buscar por Nombre, Teléfono o Email..."></select>
                         <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#createClientModal">
                             <i class="bi bi-person-plus-fill"></i>
                         </button>
-                        <input type="hidden" name="cliente_id" id="cliente_id">
-                        <div id="search-results" class="dropdown-menu w-100"></div>
                     </div>
                     <div id="discount-alert-container" class="mt-2"></div>
                 </div>

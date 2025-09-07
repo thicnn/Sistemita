@@ -246,6 +246,7 @@ CREATE TABLE `productos` (
   `categoria` varchar(100) NOT NULL,
   `descripcion` varchar(255) NOT NULL,
   `precio` decimal(10,2) NOT NULL,
+  `costo` decimal(10,2) NOT NULL DEFAULT 0.00,
   `disponible` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

@@ -1,19 +1,22 @@
 <?php
 require_once '../models/User.php';
 require_once '../models/Order.php';
-require_once '../models/Client.php'; // ¡Necesitamos el ClientModel!
+require_once '../models/Client.php';
+require_once '../models/Report.php';
 
 class AuthController
 {
     private $userModel;
     private $orderModel;
+    private $clientModel;
+    private $reportModel;
 
-    private $clientModel; // Añadimos la propiedad
     public function __construct($db_connection)
     {
         $this->userModel = new User($db_connection);
         $this->orderModel = new Order($db_connection);
-        $this->clientModel = new Client($db_connection); // Lo instanciamos
+        $this->clientModel = new Client($db_connection);
+        $this->reportModel = new Report($db_connection);
     }
 
     public function showLoginForm()
@@ -39,9 +42,12 @@ class AuthController
             $pedidosPorEstado[$pedido['estado']][] = $pedido;
         }
 
-        // 2. Obtener nuevas estadísticas
+        // 2. Obtener nuevas estadísticas para KPIs
         $dashboardStats = $this->orderModel->getDashboardStats();
         $newClientsThisMonth = $this->clientModel->countNewClientsThisMonth();
+        $internalOrderRate = $this->orderModel->getInternalOrderRateForCurrentMonth();
+        $averageTicket = ($dashboardStats['todays_orders'] > 0) ? $dashboardStats['todays_sales'] / $dashboardStats['todays_orders'] : 0;
+
 
         // 3. Obtener pedidos recientes
         $recentOrders = $this->orderModel->findRecentOrders(5);
@@ -49,7 +55,16 @@ class AuthController
         // 4. Obtener el ranking de mejores clientes
         $topClients = $this->clientModel->getTopClientsByOrderCount();
 
-        // 5. Pasamos todos los datos a la vista
+        // 5. Datos para el gráfico comparativo de períodos
+        $endDateCurrent = date('Y-m-d');
+        $startDateCurrent = date('Y-m-d', strtotime('-29 days'));
+        $salesCurrentPeriod = $this->reportModel->getTotalSalesForPeriod($startDateCurrent, $endDateCurrent);
+
+        $endDatePrevious = date('Y-m-d', strtotime('-30 days'));
+        $startDatePrevious = date('Y-m-d', strtotime('-59 days'));
+        $salesPreviousPeriod = $this->reportModel->getTotalSalesForPeriod($startDatePrevious, $endDatePrevious);
+
+        // 6. Pasamos todos los datos a la vista
         require_once '../views/layouts/header.php';
         require_once '../views/pages/dashboard/index.php';
         require_once '../views/layouts/footer.php';

@@ -70,7 +70,7 @@ class AdminController {
     public function storeProduct() {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->productModel->create($_POST['tipo'], $_POST['categoria'] ?? '', $_POST['descripcion'], $_POST['precio']);
+            $this->productModel->create($_POST['tipo'], $_POST['categoria'] ?? '', $_POST['descripcion'], $_POST['precio'], $_POST['costo']);
         }
         header('Location: /sistemagestion/admin/products');
         exit();
@@ -88,7 +88,7 @@ class AdminController {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $disponible = isset($_POST['disponible']) ? 1 : 0;
-            $this->productModel->update($id, $_POST['descripcion'], $_POST['precio'], $disponible);
+            $this->productModel->update($id, $_POST['descripcion'], $_POST['precio'], $_POST['costo'], $disponible);
         }
         header('Location: /sistemagestion/admin/products');
         exit();

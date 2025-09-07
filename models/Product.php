@@ -35,20 +35,20 @@ class Product
         return $result->fetch_assoc();
     }
 
-    public function update($id, $descripcion, $precio, $disponible)
+    public function update($id, $descripcion, $precio, $costo, $disponible)
     {
-        $query = "UPDATE " . $this->table_name . " SET descripcion = ?, precio = ?, disponible = ? WHERE id = ?";
+        $query = "UPDATE " . $this->table_name . " SET descripcion = ?, precio = ?, costo = ?, disponible = ? WHERE id = ?";
         $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("sdii", $descripcion, $precio, $disponible, $id);
+        $stmt->bind_param("sddii", $descripcion, $precio, $costo, $disponible, $id);
         return $stmt->execute();
     }
 
-    public function create($tipo, $categoria, $descripcion, $precio)
+    public function create($tipo, $categoria, $descripcion, $precio, $costo)
     {
-        $query = "INSERT INTO " . $this->table_name . " (tipo, categoria, descripcion, precio, maquina_id) VALUES (?, ?, ?, ?, 1)";
+        $query = "INSERT INTO " . $this->table_name . " (tipo, categoria, descripcion, precio, costo, maquina_id) VALUES (?, ?, ?, ?, ?, 1)";
         $stmt = $this->connection->prepare($query);
         $categoria = empty($categoria) ? '' : $categoria;
-        $stmt->bind_param("sssd", $tipo, $categoria, $descripcion, $precio);
+        $stmt->bind_param("sssdd", $tipo, $categoria, $descripcion, $precio, $costo);
         return $stmt->execute();
     }
 

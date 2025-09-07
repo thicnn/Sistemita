@@ -109,7 +109,14 @@
 </div>
 
 <div class="card shadow-sm mt-4">
-    <div class="card-header"><h5 class="mb-0">Top 25 Productos Más Vendidos</h5></div>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Top 25 Productos Más Vendidos</h5>
+        <div class="btn-group btn-group-sm">
+            <a href="?sort_top=unidades_vendidas DESC" class="btn btn-outline-secondary <?php echo ($topSellingOrderBy === 'unidades_vendidas DESC') ? 'active' : ''; ?>">Por Unidades</a>
+            <a href="?sort_top=ingresos_generados DESC" class="btn btn-outline-secondary <?php echo ($topSellingOrderBy === 'ingresos_generados DESC') ? 'active' : ''; ?>">Por Ingresos</a>
+            <a href="?sort_top=ganancia_generada DESC" class="btn btn-outline-secondary <?php echo ($topSellingOrderBy === 'ganancia_generada DESC') ? 'active' : ''; ?>">Por Ganancia</a>
+        </div>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-sm table-striped">
@@ -118,16 +125,18 @@
                         <th>Producto</th>
                         <th class="text-end">Unidades Vendidas</th>
                         <th class="text-end">Ingresos Generados</th>
+                        <th class="text-end">Ganancia Generada</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($topSellingProducts)): ?>
-                        <tr><td colspan="3" class="text-center text-muted">No hay datos de productos vendidos.</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted">No hay datos de productos vendidos.</td></tr>
                     <?php else: foreach ($topSellingProducts as $product): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($product['descripcion']); ?></td>
                             <td class="text-end"><?php echo $product['unidades_vendidas']; ?></td>
                             <td class="text-end">$<?php echo number_format($product['ingresos_generados'], 2); ?></td>
+                            <td class="text-end fw-bold text-success">$<?php echo number_format($product['ganancia_generada'], 2); ?></td>
                         </tr>
                     <?php endforeach; endif; ?>
                 </tbody>

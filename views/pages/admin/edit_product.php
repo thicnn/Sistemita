@@ -13,11 +13,20 @@
                         <label for="descripcion" class="form-label">Descripción (Nombre del Producto)</label>
                         <input type="text" id="descripcion" name="descripcion" class="form-control" value="<?php echo htmlspecialchars($product['descripcion']); ?>" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="precio" class="form-label">Precio</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" id="precio" name="precio" class="form-control" step="0.01" value="<?php echo htmlspecialchars($product['precio']); ?>" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="precio" class="form-label">Precio de Venta</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="precio" name="precio" class="form-control" step="0.01" value="<?php echo htmlspecialchars($product['precio']); ?>" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="costo" class="form-label">Costo Unitario</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="costo" name="costo" class="form-control" step="0.01" value="<?php echo htmlspecialchars($product['costo'] ?? '0.00'); ?>" required>
+                            </div>
                         </div>
                     </div>
 

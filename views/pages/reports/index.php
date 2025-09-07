@@ -137,6 +137,28 @@ $nombreMesSeleccionado = $mesesEnEspanol[$numeroMes] . ' de ' . $anio;
         </a>
     </div>
     <div class="col-lg-4 col-md-6">
+        <a href="/sistemagestion/reports/client_segmentation" class="report-card-link">
+            <div class="card report-card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-person-check-fill fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Segmentación de Clientes</h5>
+                    <p class="card-text">Clasifica clientes por su valor (RFM).</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <a href="/sistemagestion/reports/frequently_bought_together" class="report-card-link">
+            <div class="card report-card text-center shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-c-circle fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Compras Conjuntas</h5>
+                    <p class="card-text">Productos comprados juntos frecuentemente.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-4 col-md-6">
         <a href="/sistemagestion/reports/reconciliation" class="report-card-link">
             <div class="card report-card text-center shadow-sm">
                 <div class="card-body">
@@ -256,7 +278,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
+                    plugins: { legend: { position: 'bottom' } },
+                    onClick: (e, elements, chart) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = chart.data.labels[index];
+                            window.location.href = `/sistemagestion/reports/status/${encodeURIComponent(label)}`;
+                        }
+                    }
                 }
             });
         } else {

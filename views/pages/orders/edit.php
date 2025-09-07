@@ -64,18 +64,11 @@
 
                     <hr class="my-4">
 
-                    <?php if ($order['estado'] !== 'Cancelado'): ?>
-                        <div class="cancel-section bg-light border border-danger-subtle rounded p-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="cancelar-checkbox">
-                                <label class="form-check-label fw-bold text-danger" for="cancelar-checkbox">
-                                    Cancelar Pedido
-                                </label>
-                            </div>
-                            <div class="mt-2" id="motivo-container" style="display:none;">
-                                <label for="motivo_cancelacion" class="form-label">Motivo de la Cancelación (requerido):</label>
-                                <textarea name="motivo_cancelacion" id="motivo_cancelacion" rows="3" class="form-control"></textarea>
-                            </div>
+                    <?php if ($order['estado'] !== 'Cancelado' && $order['estado'] !== 'Entregado'): ?>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                                <i class="bi bi-x-circle-fill me-2"></i>Cancelar Pedido
+                            </button>
                         </div>
                         <hr class="my-4">
                     <?php endif; ?>
@@ -119,12 +112,36 @@
 </div>
 
 
+<!-- Modal de Cancelación -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/sistemagestion/orders/edit/<?php echo $order['id']; ?>" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelOrderModalLabel">Confirmar Cancelación de Pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Estás a punto de cancelar el pedido #<?php echo $order['id']; ?>. Esta acción no se puede deshacer.</p>
+                    <div class="mb-3">
+                        <label for="motivo_cancelacion_modal" class="form-label">Por favor, escribe el motivo de la cancelación (requerido):</label>
+                        <textarea name="motivo_cancelacion" id="motivo_cancelacion_modal" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Cancelación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const estadoSelect = document.getElementById('estado');
         const pagoFinalContainer = document.getElementById('pago-final-container');
         const pagoRadios = document.querySelectorAll('input[name="metodo_pago_final"]');
-        const cancelarCheckbox = document.getElementById('cancelar-checkbox');
 
         function togglePagoFinal() {
             const esEntregado = estadoSelect.value === 'Entregado';
@@ -148,21 +165,5 @@
             togglePagoFinal();
         }
 
-        if (cancelarCheckbox) {
-            const motivoContainer = document.getElementById('motivo-container');
-            const motivoTextarea = document.getElementById('motivo_cancelacion');
-
-            cancelarCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    motivoContainer.style.display = 'block';
-                    motivoTextarea.required = true;
-                    if(estadoSelect) estadoSelect.disabled = true;
-                } else {
-                    motivoContainer.style.display = 'none';
-                    motivoTextarea.required = false;
-                    if(estadoSelect) estadoSelect.disabled = false;
-                }
-            });
-        }
     });
 </script>

@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 
 // Carga de archivos esenciales
 require_once '../config/database.php';
+require_once '../core/helpers.php';
 require_once '../controllers/AuthController.php';
 require_once '../controllers/ClientController.php';
 require_once '../controllers/OrderController.php';
@@ -128,8 +129,14 @@ if (preg_match('#^clients/show/(\d+)$#', $url, $matches)) {
         case 'reports/products':
             $reportController->products();
             break;
+        case 'reports/frequently_bought_together':
+            $reportController->frequentlyBoughtTogether();
+            break;
         case 'reports/clients':
             $reportController->clients();
+            break;
+        case 'reports/client_segmentation':
+            $reportController->clientSegmentation();
             break;
         case 'reports/store_counter':
             if ($method === 'POST') $reportController->storeCounter();

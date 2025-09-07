@@ -19,6 +19,24 @@ class Report
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+    public function getFrequentlyBoughtTogether()
+    {
+        $query = "SELECT
+                    p1.descripcion as producto_a,
+                    p2.descripcion as producto_b,
+                    COUNT(*) as veces_juntos
+                  FROM items_pedido ip1
+                  JOIN items_pedido ip2 ON ip1.pedido_id = ip2.pedido_id AND ip1.producto_id < ip2.producto_id
+                  JOIN productos p1 ON ip1.producto_id = p1.id
+                  JOIN productos p2 ON ip2.producto_id = p2.id
+                  GROUP BY p1.id, p2.id
+                  ORDER BY veces_juntos DESC
+                  LIMIT 50";
+
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
     // --- NUEVO MÉTODO ---
     /**
      * Obtiene un resumen de ventas y pedidos de los últimos 6 meses para un gráfico.
@@ -561,18 +579,27 @@ class Report
         return array_values($evolutionData);
     }
 
-    public function getTopSellingProductsPaginated($limit, $offset)
+    public function getTopSellingProductsPaginated($limit, $offset, $orderBy = 'unidades_vendidas DESC')
     {
         $query = "SELECT
                     prod.id,
                     prod.descripcion,
                     SUM(i.cantidad) as unidades_vendidas,
-                    SUM(i.subtotal) as ingresos_generados
+                    SUM(i.subtotal) as ingresos_generados,
+                    (SUM(i.subtotal) - SUM(i.cantidad * prod.costo)) as ganancia_generada
                   FROM items_pedido i
                   JOIN productos prod ON i.producto_id = prod.id
-                  GROUP BY prod.id, prod.descripcion
-                  ORDER BY unidades_vendidas DESC
-                  LIMIT ? OFFSET ?";
+                  GROUP BY prod.id, prod.descripcion";
+
+        $allowedOrderBy = ['unidades_vendidas DESC', 'ingresos_generados DESC', 'ganancia_generada DESC'];
+        if (in_array($orderBy, $allowedOrderBy)) {
+            $query .= " ORDER BY " . $orderBy;
+        } else {
+            $query .= " ORDER BY unidades_vendidas DESC";
+        }
+
+        $query .= " LIMIT ? OFFSET ?";
+
         $stmt = $this->connection->prepare($query);
         $stmt->bind_param("ii", $limit, $offset);
         $stmt->execute();
@@ -720,6 +747,19 @@ class Report
             ];
         }
         return $dataByDay;
+    }
+
+    public function getTotalSalesForPeriod($startDate, $endDate)
+    {
+        $endDate = $endDate . ' 23:59:59';
+        $query = "SELECT SUM(costo_total) as total_ventas
+                  FROM pedidos
+                  WHERE fecha_creacion BETWEEN ? AND ? AND estado = 'Entregado'";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        return (float)($result['total_ventas'] ?? 0);
     }
     public function getSalesDistributionForDay($date)
     {

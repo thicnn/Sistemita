@@ -198,6 +198,69 @@ class ReportController
         require_once '../views/layouts/footer.php';
     }
 
+    public function frequentlyBoughtTogether()
+    {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            header('Location: /sistemagestion/dashboard');
+            exit();
+        }
+
+        $frequentlyBoughtTogether = $this->reportModel->getFrequentlyBoughtTogether();
+
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/reports/frequently_bought_together.php';
+        require_once '../views/layouts/footer.php';
+    }
+
+    public function clientSegmentation()
+    {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
+            header('Location: /sistemagestion/dashboard');
+            exit();
+        }
+
+        $clients = $this->clientModel->getRFMData();
+
+        // Simple RFM Segmentation Logic
+        foreach ($clients as &$client) {
+            // Recency Score (lower is better)
+            if ($client['recencia'] <= 30) $r_score = 5;
+            elseif ($client['recencia'] <= 60) $r_score = 4;
+            elseif ($client['recencia'] <= 90) $r_score = 3;
+            elseif ($client['recencia'] <= 180) $r_score = 2;
+            else $r_score = 1;
+
+            // Frequency Score (higher is better)
+            if ($client['frecuencia'] >= 10) $f_score = 5;
+            elseif ($client['frecuencia'] >= 5) $f_score = 4;
+            elseif ($client['frecuencia'] >= 3) $f_score = 3;
+            elseif ($client['frecuencia'] >= 2) $f_score = 2;
+            else $f_score = 1;
+
+            // Monetary Score (higher is better)
+            if ($client['monetario'] >= 10000) $m_score = 5;
+            elseif ($client['monetario'] >= 5000) $m_score = 4;
+            elseif ($client['monetario'] >= 2000) $m_score = 3;
+            elseif ($client['monetario'] >= 500) $m_score = 2;
+            else $m_score = 1;
+
+            $client['segmento'] = 'General';
+            if ($r_score >= 4 && $f_score >= 4 && $m_score >= 4) {
+                $client['segmento'] = 'Campeones';
+            } elseif ($r_score >= 3 && $f_score >= 3) {
+                $client['segmento'] = 'Leales';
+            } elseif ($r_score <= 2 && $f_score >= 3) {
+                $client['segmento'] = 'En Riesgo';
+            } elseif ($r_score <= 2 && $f_score <= 2) {
+                $client['segmento'] = 'Hibernando';
+            }
+        }
+
+        require_once '../views/layouts/header.php';
+        require_once '../views/pages/reports/client_segmentation.php';
+        require_once '../views/layouts/footer.php';
+    }
+
     public function orders()
     {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') {
@@ -304,7 +367,8 @@ class ReportController
         $limit = 25;
         $topSellingOffset = ($topSellingPage - 1) * $limit;
         $totalTopSelling = $this->reportModel->countTopSellingProducts();
-        $topSellingProducts = $this->reportModel->getTopSellingProductsPaginated($limit, $topSellingOffset);
+        $topSellingOrderBy = $_GET['sort_top'] ?? 'unidades_vendidas DESC';
+        $topSellingProducts = $this->reportModel->getTopSellingProductsPaginated($limit, $topSellingOffset, $topSellingOrderBy);
         $topSellingTotalPages = ceil($totalTopSelling / $limit);
 
         // Least Selling Products

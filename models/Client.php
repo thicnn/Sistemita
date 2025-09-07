@@ -249,4 +249,20 @@ class Client
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+    public function getRFMData()
+    {
+        $query = "SELECT
+                    c.id,
+                    c.nombre,
+                    DATEDIFF(NOW(), MAX(p.fecha_creacion)) as recencia,
+                    COUNT(p.id) as frecuencia,
+                    SUM(p.costo_total) as monetario
+                  FROM clientes c
+                  JOIN pedidos p ON c.id = p.cliente_id
+                  WHERE p.estado = 'Entregado'
+                  GROUP BY c.id, c.nombre";
+
+        $result = $this->connection->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
 }

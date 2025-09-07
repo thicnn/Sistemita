@@ -193,6 +193,31 @@ class Order
         ];
     }
 
+    public function getInternalOrderRateForCurrentMonth()
+    {
+        $month = date('Y-m');
+
+        $query_total = "SELECT COUNT(id) as total FROM pedidos WHERE DATE_FORMAT(fecha_creacion, '%Y-%m') = ?";
+        $stmt_total = $this->connection->prepare($query_total);
+        $stmt_total->bind_param("s", $month);
+        $stmt_total->execute();
+        $total_result = $stmt_total->get_result()->fetch_assoc();
+        $total_pedidos = $total_result['total'] ?? 0;
+
+        if ($total_pedidos == 0) {
+            return 0;
+        }
+
+        $query_internal = "SELECT COUNT(id) as total FROM pedidos WHERE DATE_FORMAT(fecha_creacion, '%Y-%m') = ? AND es_interno = 1";
+        $stmt_internal = $this->connection->prepare($query_internal);
+        $stmt_internal->bind_param("s", $month);
+        $stmt_internal->execute();
+        $internal_result = $stmt_internal->get_result()->fetch_assoc();
+        $internal_pedidos = $internal_result['total'] ?? 0;
+
+        return ($internal_pedidos / $total_pedidos) * 100;
+    }
+
     public function findRecentOrders($limit = 5)
     {
         $query = "SELECT p.id, p.estado, p.costo_total, c.nombre as nombre_cliente 

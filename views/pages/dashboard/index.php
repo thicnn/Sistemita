@@ -29,7 +29,7 @@ function getStatusBadgeClass($status)
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="row g-4">
-            <div class="col-md-6 animated-card">
+            <div class="col-lg-4 col-md-6 animated-card">
                 <div class="card h-100 shadow-sm border-0 border-start border-primary border-4">
                     <div class="card-body d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -40,7 +40,7 @@ function getStatusBadgeClass($status)
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 animated-card" style="animation-delay: 0.1s;">
+            <div class="col-lg-4 col-md-6 animated-card" style="animation-delay: 0.1s;">
                 <div class="card h-100 shadow-sm border-0 border-start border-success border-4">
                     <div class="card-body d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -51,9 +51,51 @@ function getStatusBadgeClass($status)
                     </div>
                 </div>
             </div>
+            <div class="col-lg-4 col-md-6 animated-card" style="animation-delay: 0.2s;">
+                <div class="card h-100 shadow-sm border-0 border-start border-info border-4">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted mb-1">Ticket Promedio (Día)</div>
+                            <div class="fs-1 fw-bold text-info">$<?php echo number_format($averageTicket, 2); ?></div>
+                        </div>
+                        <i class="bi bi-receipt fs-1 text-info-subtle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 animated-card" style="animation-delay: 0.3s;">
+                <div class="card h-100 shadow-sm border-0 border-start border-warning border-4">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted mb-1">Nuevos Clientes (Mes)</div>
+                            <div class="fs-1 fw-bold text-warning"><?php echo $newClientsThisMonth; ?></div>
+                        </div>
+                        <i class="bi bi-person-plus fs-1 text-warning-subtle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 animated-card" style="animation-delay: 0.4s;">
+                <div class="card h-100 shadow-sm border-0 border-start border-secondary border-4">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted mb-1">Tasa Pedidos Internos (Mes)</div>
+                            <div class="fs-1 fw-bold text-secondary"><?php echo number_format($internalOrderRate, 1); ?>%</div>
+                        </div>
+                        <i class="bi bi-box-seam fs-1 text-secondary-subtle"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="mt-4 pt-2 animated-card" style="animation-delay: 0.2s;">
+        <div class="card shadow-sm mt-4 animated-card" style="animation-delay: 0.5s;">
+            <div class="card-header border-0">
+                <h5 class="mb-0">Comparativa de Ingresos (Últimos 30 vs. 30 Anteriores)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesComparisonChart" style="min-height: 200px;"></canvas>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-2 animated-card" style="animation-delay: 0.6s;">
             <h4 class="mb-3">Sugerencias del Día</h4>
             <div class="row g-3">
                 <div class="col-md-6">
@@ -237,4 +279,49 @@ function getStatusBadgeClass($status)
         updateClock();
         setInterval(updateClock, 1000);
     });
+
+    const salesComparisonCtx = document.getElementById('salesComparisonChart');
+    if (salesComparisonCtx) {
+        new Chart(salesComparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Período Anterior (31-60 días)', 'Período Actual (Últimos 30 días)'],
+                datasets: [{
+                    label: 'Ingresos Totales',
+                    data: [
+                        <?php echo $salesPreviousPeriod; ?>,
+                        <?php echo $salesCurrentPeriod; ?>
+                    ],
+                    backgroundColor: [
+                        'rgba(108, 117, 125, 0.5)',
+                        'rgba(13, 110, 253, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(13, 110, 253, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 </script>
