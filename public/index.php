@@ -3,14 +3,18 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+define('BASE_PATH', realpath(__DIR__ . '/..'));
+
 // Carga de archivos esenciales
-require_once '../config/database.php';
-require_once '../controllers/AuthController.php';
-require_once '../controllers/ClientController.php';
-require_once '../controllers/OrderController.php';
-require_once '../controllers/ReportController.php';
-require_once '../controllers/AdminController.php';
-require_once '../controllers/ErrorController.php';
+require_once '../vendor/autoload.php';
+require_once '../src/Config/database.php';
+
+use App\Controllers\AuthController;
+use App\Controllers\ClientController;
+use App\Controllers\OrderController;
+use App\Controllers\ReportController;
+use App\Controllers\AdminController;
+use App\Controllers\ErrorController;
 
 // Creación de instancias de los controladores
 $authController = new AuthController($connection);

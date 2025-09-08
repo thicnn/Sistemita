@@ -1,26 +1,28 @@
 <?php
-require_once '../models/User.php';
-require_once '../models/Order.php';
-require_once '../models/Client.php'; // ¡Necesitamos el ClientModel!
+namespace App\Controllers;
+
+use App\Models\User;
+use App\Models\Order;
+use App\Models\Client;
 
 class AuthController
 {
     private $userModel;
     private $orderModel;
+    private $clientModel;
 
-    private $clientModel; // Añadimos la propiedad
     public function __construct($db_connection)
     {
         $this->userModel = new User($db_connection);
         $this->orderModel = new Order($db_connection);
-        $this->clientModel = new Client($db_connection); // Lo instanciamos
+        $this->clientModel = new Client($db_connection);
     }
 
     public function showLoginForm()
     {
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/auth/login.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/auth/login.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function showDashboard()
@@ -50,9 +52,9 @@ class AuthController
         $topClients = $this->clientModel->getTopClientsByOrderCount();
 
         // 5. Pasamos todos los datos a la vista
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/dashboard/index.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/dashboard/index.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function logout()

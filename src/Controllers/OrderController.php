@@ -1,7 +1,9 @@
 <?php
-require_once '../models/Order.php';
-require_once '../models/Client.php';
-require_once '../models/Product.php';
+namespace App\Controllers;
+
+use App\Models\Order;
+use App\Models\Client;
+use App\Models\Product;
 
 class OrderController
 {
@@ -42,9 +44,9 @@ class OrderController
 
         $orders = $this->orderModel->findAllWithFilters($filters, $perPage, $offset);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/orders/index.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/orders/index.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function showCreateForm()
@@ -57,9 +59,9 @@ class OrderController
         $clients = $this->clientModel->findAll();
 
         $products = $this->productModel->findAllAvailable();
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/orders/create.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/orders/create.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function showQuickCreateForm()
@@ -70,9 +72,9 @@ class OrderController
         }
 
         $products = $this->productModel->findAllAvailable();
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/orders/quick_create.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/orders/quick_create.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function store()
@@ -150,9 +152,9 @@ class OrderController
         // Para poder recalcular descuentos en la vista, necesitamos los precios originales
         $products = $this->productModel->findAllAvailable();
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/orders/show.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/orders/show.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function addPayment($id)
@@ -196,9 +198,9 @@ class OrderController
 
         $history = $this->orderModel->getHistoryByOrderId($id);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/orders/edit.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/orders/edit.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function update($id)

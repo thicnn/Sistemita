@@ -1,5 +1,7 @@
 <?php
-require_once '../models/Error.php';
+namespace App\Controllers;
+
+use App\Models\Error;
 
 class ErrorController
 {
@@ -12,7 +14,7 @@ class ErrorController
 
     public function __construct($db_connection)
     {
-        $this->errorModel = new ErrorModel($db_connection);
+        $this->errorModel = new Error($db_connection);
     }
 
     public function showCreateForm()
@@ -24,9 +26,9 @@ class ErrorController
 
         $errorOptions = $this->errorOptions;
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/errors/create.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/errors/create.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function store()

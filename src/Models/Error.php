@@ -1,5 +1,7 @@
 <?php
-class ErrorModel
+namespace App\Models;
+
+class Error
 {
     private $connection;
     private $table_name = "pedidos_errores";

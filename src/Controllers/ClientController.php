@@ -1,6 +1,8 @@
 <?php
-require_once '../models/Client.php';
-require_once '../models/Order.php';
+namespace App\Controllers;
+
+use App\Models\Client;
+use App\Models\Order;
 
 class ClientController
 {
@@ -64,9 +66,9 @@ class ClientController
         // --- FIN DE LA CORRECCIÓN ---
 
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/clients/show.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/clients/show.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     // ... (El resto de los métodos del controlador no necesitan cambios)
@@ -90,9 +92,9 @@ class ClientController
 
         $clients = $this->clientModel->findAllWithFilters($filters, $perPage, $offset);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/clients/index.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/clients/index.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function showCreateForm()
@@ -101,9 +103,9 @@ class ClientController
             header('Location: /sistemagestion/login');
             exit();
         }
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/clients/create.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/clients/create.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function store()
@@ -127,9 +129,9 @@ class ClientController
             exit();
         }
         $client = $this->clientModel->findById($id);
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/clients/edit.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/clients/edit.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function update($id)

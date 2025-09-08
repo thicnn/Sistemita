@@ -1,9 +1,11 @@
 <?php
-require_once '../models/Client.php';
-require_once '../models/Order.php';
-require_once '../models/Report.php';
-require_once '../models/Product.php';
-require_once '../models/Config.php';
+namespace App\Controllers;
+
+use App\Models\Client;
+use App\Models\Order;
+use App\Models\Report;
+use App\Models\Product;
+use App\Models\Config;
 
 class AdminController {
     private $clientModel;
@@ -27,9 +29,9 @@ class AdminController {
         $papeles = $this->configModel->findByType('papel');
         $acabados = $this->configModel->findByType('acabado');
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/admin/settings.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/admin/settings.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function storeSetting() {
@@ -55,16 +57,16 @@ class AdminController {
             exit();
         }
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/admin/products.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/admin/products.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function showProductCreateForm() {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/admin/create_product.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/admin/create_product.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function storeProduct() {
@@ -79,9 +81,9 @@ class AdminController {
     public function showProductEditForm($id) {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'administrador') { header('Location: /sistemagestion/dashboard'); exit(); }
         $product = $this->productModel->findById($id);
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/admin/edit_product.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/admin/edit_product.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function updateProduct($id) {

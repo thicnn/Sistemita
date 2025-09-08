@@ -1,4 +1,5 @@
 <?php
+namespace App\Models;
 
 class Order
 {
@@ -311,7 +312,7 @@ class Order
                 $resultado = $stmt_producto->get_result()->fetch_assoc();
 
                 if (!$resultado) {
-                    throw new Exception("Producto con ID $producto_id no encontrado.");
+                    throw new \Exception("Producto con ID $producto_id no encontrado.");
                 }
 
                 // Calculamos el subtotal del item.
@@ -356,7 +357,7 @@ class Order
 
             $this->connection->commit();
             return $pedido_id;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->connection->rollback();
             error_log("Error al crear pedido: " . $e->getMessage());
             $_SESSION['toast'] = ['message' => 'Error de base de datos al crear el pedido: ' . $e->getMessage(), 'type' => 'danger'];

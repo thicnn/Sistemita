@@ -1,8 +1,11 @@
 <?php
-require_once '../models/Order.php';
-require_once '../models/Report.php';
-require_once '../models/Client.php';
-require_once '../models/Product.php';
+namespace App\Controllers;
+
+use App\Models\Order;
+use App\Models\Report;
+use App\Models\Client;
+use App\Models\Product;
+use DateTime;
 
 class ReportController
 {
@@ -52,9 +55,9 @@ class ReportController
             }
         }
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/index.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/index.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function dashboard()
@@ -111,9 +114,9 @@ class ReportController
             }
         }
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/dashboard.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/dashboard.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function sales()
@@ -136,9 +139,9 @@ class ReportController
         $profitReport = $this->reportModel->getProfitByDateRange($startDate, $endDate);
 
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/sales.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/sales.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function weeklyProduction()
@@ -166,9 +169,9 @@ class ReportController
 
         $weeklyData = $this->reportModel->getWeeklyProductionData($startDate, $endDate);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/weekly_production.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/weekly_production.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function weeklySalesComparison()
@@ -193,9 +196,9 @@ class ReportController
         $dataCurrentWeek = $this->reportModel->getSalesByDayForWeek($startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d'));
         $dataPrevWeek = $this->reportModel->getSalesByDayForWeek($startOfPrevWeek->format('Y-m-d'), $endOfPrevWeek->format('Y-m-d'));
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/weekly_sales_comparison.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/weekly_sales_comparison.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function orders()
@@ -223,9 +226,9 @@ class ReportController
 
         $totalPages = ceil($totalOrders / $limit);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/orders.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/orders.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function control()
@@ -267,9 +270,9 @@ class ReportController
         ];
         $counterHistory = $this->reportModel->getCounterHistory($counterFilters);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/control.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/control.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function products()
@@ -314,9 +317,9 @@ class ReportController
         $leastSellingProducts = $this->reportModel->getLeastSellingProductsPaginated($limit, $leastSellingOffset);
         $leastSellingTotalPages = ceil($totalLeastSelling / $limit);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/products.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/products.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function clients()
@@ -342,9 +345,9 @@ class ReportController
         ];
         $topClients = $this->clientModel->getTopClients($topClientsFilters);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/clients.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/clients.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
 
@@ -373,9 +376,9 @@ class ReportController
 
         $totalPages = ceil($totalOrders / $limit);
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/status_details.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/status_details.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function storeCounter()
@@ -404,9 +407,9 @@ class ReportController
         $accountBalances = $this->reportModel->getAccountBalances();
         $depositHistory = $this->reportModel->getDepositHistory();
 
-        require_once '../views/layouts/header.php';
-        require_once '../views/pages/reports/reconciliation.php';
-        require_once '../views/layouts/footer.php';
+        require_once BASE_PATH . '/views/layouts/header.php';
+        require_once BASE_PATH . '/views/pages/reports/reconciliation.php';
+        require_once BASE_PATH . '/views/layouts/footer.php';
     }
 
     public function storeDeposit()
