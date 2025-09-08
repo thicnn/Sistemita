@@ -26,8 +26,9 @@ function getStatusBadgeClass($status)
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-8">
+<div class="row g-4" id="dashboard-widgets-container">
+    <div class="col-lg-8 widget-column" data-widget-id="main-column">
+        <div class="drag-handle text-muted text-center mb-2"><i class="bi bi-grip-horizontal"></i></div>
         <div class="row g-4">
             <div class="col-md-6 animated-card">
                 <div class="card h-100 shadow-sm border-0 border-start border-primary border-4">
@@ -52,6 +53,31 @@ function getStatusBadgeClass($status)
                 </div>
             </div>
         </div>
+
+        <!-- Alertas de Stock Bajo -->
+        <?php if (isset($lowStockMaterials) && !empty($lowStockMaterials) && $_SESSION['user_role'] === 'administrador') : ?>
+            <div class="card border-warning shadow-sm mt-4 animated-card" style="animation-delay: 0.15s;">
+                <div class="card-header bg-warning-subtle text-warning-emphasis d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 h6">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Alertas de Stock de Materiales
+                    </h5>
+                    <span class="badge bg-warning text-dark"><?php echo count($lowStockMaterials); ?></span>
+                </div>
+                <div class="list-group list-group-flush">
+                    <?php foreach ($lowStockMaterials as $material) : ?>
+                        <a href="/sistemagestion/admin/materials/edit/<?php echo $material['id']; ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong><?php echo htmlspecialchars($material['nombre']); ?></strong>
+                                <small class="d-block text-danger fw-bold">
+                                    Quedan <?php echo number_format($material['stock_actual'], 2); ?> / Mínimo: <?php echo number_format($material['stock_minimo'], 2); ?> <?php echo htmlspecialchars($material['unidad_medida']); ?>
+                                </small>
+                            </div>
+                            <i class="bi bi-box-arrow-up-right text-muted"></i>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="mt-4 pt-2 animated-card" style="animation-delay: 0.2s;">
             <h4 class="mb-3">Sugerencias del Día</h4>
@@ -79,35 +105,52 @@ function getStatusBadgeClass($status)
 
         <div class="card shadow-sm mt-4 animated-card" style="animation-delay: 0.3s;">
             <div class="card-header border-0">
-                <h5 class="mb-0">Últimos Pedidos</h5>
+                <h5 class="mb-0">Actividad Reciente</h5>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <tbody>
-                            <?php if (empty($recentOrders)): ?>
-                                <tr>
-                                    <td class="text-center p-3 text-muted">No hay pedidos recientes.</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($recentOrders as $order): ?>
-                                    <tr>
-                                        <td class="ps-3"><strong>#<?php echo $order['id']; ?></strong></td>
-                                        <td><?php echo htmlspecialchars($order['nombre_cliente'] ?? 'N/A'); ?></td>
-                                        <td><span class="badge rounded-pill <?php echo getStatusBadgeClass($order['estado']); ?>"><?php echo $order['estado']; ?></span></td>
-                                        <td class="text-end fw-medium">$<?php echo number_format($order['costo_total'], 2); ?></td>
-                                        <td class="text-end pe-3"><a href="/sistemagestion/orders/show/<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-secondary">Ver</a></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <?php if (empty($activityFeed)): ?>
+                        <li class="list-group-item text-muted">No hay actividad reciente.</li>
+                    <?php else: ?>
+                        <?php foreach($activityFeed as $activity): ?>
+                            <li class="list-group-item d-flex align-items-center">
+                                <?php
+                                    $icon = '';
+                                    $text = '';
+                                    $link = '#';
+                                    switch ($activity['type']) {
+                                        case 'pedido':
+                                            $icon = 'bi-receipt text-primary';
+                                            $text = "Nuevo pedido <strong>#" . $activity['data']['id'] . "</strong> de " . htmlspecialchars($activity['data']['nombre_cliente'] ?? 'Consumidor Final');
+                                            $link = "/sistemagestion/orders/show/" . $activity['data']['id'];
+                                            break;
+                                        case 'cliente':
+                                            $icon = 'bi-person-plus-fill text-success';
+                                            $text = "Nuevo cliente registrado: <strong>" . htmlspecialchars($activity['data']['nombre']) . "</strong>";
+                                            $link = "/sistemagestion/clients/show/" . $activity['data']['id'];
+                                            break;
+                                        case 'pago':
+                                            $icon = 'bi-cash-coin text-info';
+                                            $text = "Pago de <strong>$" . number_format($activity['data']['monto'], 2) . "</strong> recibido para el pedido #" . $activity['data']['pedido_id'];
+                                            $link = "/sistemagestion/orders/show/" . $activity['data']['pedido_id'];
+                                            break;
+                                    }
+                                ?>
+                                <i class="bi <?php echo $icon; ?> fs-4 me-3"></i>
+                                <div class="flex-grow-1">
+                                    <a href="<?php echo $link; ?>" class="text-decoration-none text-body"><?php echo $text; ?></a>
+                                    <small class="d-block text-muted"><?php echo (new DateTime($activity['date']))->format('d M Y, H:i'); ?></small>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </ul>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4">
+    <div class="col-lg-4 widget-column" data-widget-id="sidebar-column">
+        <div class="drag-handle text-muted text-center mb-2"><i class="bi bi-grip-horizontal"></i></div>
         <div class="card shadow-sm mb-4 animated-card" style="animation-delay: 0.4s;">
             <div class="card-header border-0">
                 <h5 class="mb-0">Acciones Rápidas</h5>
@@ -117,6 +160,39 @@ function getStatusBadgeClass($status)
                 <a href="/sistemagestion/clients/create" class="btn btn-outline-secondary"><i class="bi bi-person-plus me-2"></i>Nuevo Cliente</a>
             </div>
         </div>
+
+        <!-- Metas Mensuales -->
+        <?php if (isset($goalsData) && ($_SESSION['user_role'] === 'administrador') && ($goalsData['sales']['goal'] > 0 || $goalsData['orders']['goal'] > 0)) : ?>
+        <div class="card shadow-sm mb-4 animated-card" style="animation-delay: 0.45s;">
+            <div class="card-header border-0">
+                <h5 class="mb-0">Progreso Mensual</h5>
+            </div>
+            <div class="card-body">
+                <?php if ($goalsData['sales']['goal'] > 0) : ?>
+                    <div>
+                        <div class="d-flex justify-content-between">
+                            <span>Meta de Ventas</span>
+                            <span class="fw-bold">$<?php echo number_format($goalsData['sales']['current'], 2); ?> / $<?php echo number_format($goalsData['sales']['goal'], 2); ?></span>
+                        </div>
+                        <div class="progress mt-1" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: <?php echo min(100, $goalsData['sales']['percent']); ?>%;" aria-valuenow="<?php echo $goalsData['sales']['percent']; ?>" aria-valuemin="0" aria-valuemax="100"><?php echo round($goalsData['sales']['percent']); ?>%</div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <?php if ($goalsData['orders']['goal'] > 0) : ?>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Meta de Pedidos</span>
+                            <span class="fw-bold"><?php echo $goalsData['orders']['current']; ?> / <?php echo $goalsData['orders']['goal']; ?></span>
+                        </div>
+                        <div class="progress mt-1" style="height: 20px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: <?php echo min(100, $goalsData['orders']['percent']); ?>%;" aria-valuenow="<?php echo $goalsData['orders']['percent']; ?>" aria-valuemin="0" aria-valuemax="100"><?php echo round($goalsData['orders']['percent']); ?>%</div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="card shadow-sm mb-4 animated-card" style="animation-delay: 0.5s;">
             <div class="card-header border-0">
@@ -213,6 +289,10 @@ function getStatusBadgeClass($status)
     .fw-medium {
         font-weight: 500 !important;
     }
+    .drag-handle {
+        cursor: move;
+        padding: 5px;
+    }
 </style>
 
 <script>
@@ -236,5 +316,30 @@ function getStatusBadgeClass($status)
 
         updateClock();
         setInterval(updateClock, 1000);
+
+        // Lógica de widgets arrastrables
+        const container = document.getElementById('dashboard-widgets-container');
+        if (container) {
+            const sortable = new Sortable(container, {
+                animation: 150,
+                handle: '.drag-handle',
+                onEnd: function() {
+                    const order = Array.from(container.children).map(item => item.dataset.widgetId);
+                    localStorage.setItem('dashboardWidgetOrder', JSON.stringify(order));
+                }
+            });
+
+            // Cargar el orden guardado
+            const savedOrder = localStorage.getItem('dashboardWidgetOrder');
+            if (savedOrder) {
+                const order = JSON.parse(savedOrder);
+                order.forEach(widgetId => {
+                    const widget = container.querySelector(`[data-widget-id="${widgetId}"]`);
+                    if (widget) {
+                        container.appendChild(widget);
+                    }
+                });
+            }
+        }
     });
 </script>

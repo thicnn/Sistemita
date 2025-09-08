@@ -40,6 +40,69 @@
             </div>
         </div>
     </div>
+
+    <!-- Sección de Gestión de Materiales -->
+    <div class="col-lg-8 animated-card mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h4 class="mb-0 h5">Gestión de Materiales para este Producto</h4>
+            </div>
+            <div class="card-body p-4">
+                <h5>Materiales Ya Vinculados</h5>
+                <?php
+                $product_id = $product['id'];
+                $associated_materials = $data['associated_materials'] ?? [];
+                $all_materials = $data['all_materials'] ?? [];
+
+                if (empty($associated_materials)) : ?>
+                    <p class="text-muted">Este producto aún no consume ningún material del inventario.</p>
+                <?php else : ?>
+                    <ul class="list-group mb-4">
+                        <?php foreach ($associated_materials as $am) : ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="me-2"><?php echo htmlspecialchars($am['nombre']); ?></strong>
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+                                        Consume: <?php echo htmlspecialchars($am['cantidad_consumida']); ?> <?php echo htmlspecialchars($am['unidad_medida']); ?>
+                                    </span>
+                                </div>
+                                <form action="/sistemagestion/admin/products/remove_material/<?php echo $am['asociacion_id']; ?>" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres quitar este material del producto?');">
+                                    <input type="hidden" name="product_id" value="<?php echo $product_id; ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Quitar material">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+
+                <hr class="my-4">
+
+                <h5>Asociar Nuevo Material o Actualizar Cantidad</h5>
+                <form action="/sistemagestion/admin/products/add_material/<?php echo $product_id; ?>" method="POST" class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label for="material_id" class="form-label">Material</label>
+                        <select name="material_id" id="material_id" class="form-select" required>
+                            <option value="" disabled selected>Selecciona un material...</option>
+                            <?php foreach ($all_materials as $material) : ?>
+                                <option value="<?php echo $material['id']; ?>"><?php echo htmlspecialchars($material['nombre']); ?> (Stock: <?php echo $material['stock_actual'] . ' ' . $material['unidad_medida']; ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cantidad_consumida" class="form-label">Cantidad a Consumir</label>
+                        <input type="number" name="cantidad_consumida" id="cantidad_consumida" class="form-control" step="0.01" required placeholder="Ej: 1.5">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-link-45deg me-1"></i> Vincular
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>

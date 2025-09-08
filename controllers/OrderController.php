@@ -2,18 +2,21 @@
 require_once '../models/Order.php';
 require_once '../models/Client.php';
 require_once '../models/Product.php';
+require_once '../models/Material.php';
 
 class OrderController
 {
     private $orderModel;
     private $clientModel;
     private $productModel;
+    private $materialModel;
 
     public function __construct($db_connection)
     {
         $this->orderModel = new Order($db_connection);
         $this->clientModel = new Client($db_connection);
         $this->productModel = new Product($db_connection);
+        $this->materialModel = new Material($db_connection);
     }
 
     public function index()
@@ -243,9 +246,23 @@ class OrderController
             }
 
             if ($nuevoEstado === 'Entregado' && $estadoAntiguo !== 'Entregado') {
+                // Saldar la cuenta del pedido
                 $metodo_pago_final = $_POST['metodo_pago_final'] ?? 'Efectivo';
                 $this->orderModel->settlePayment($id, $metodo_pago_final);
                 $this->orderModel->addHistory($id, $_SESSION['user_id'], "Saldó la cuenta al marcar como 'Entregado' con " . htmlspecialchars($metodo_pago_final) . ".");
+
+                // Reducir el stock de los materiales asociados
+                $items = $ordenActual['items'];
+                foreach ($items as $item) {
+                    $materialesAsociados = $this->productModel->getMaterialesAsociados($item['producto_id']);
+                    if (!empty($materialesAsociados)) {
+                        foreach ($materialesAsociados as $material) {
+                            $cantidadTotalConsumida = $material['cantidad_consumida'] * $item['cantidad'];
+                            $this->materialModel->reducirStock($material['id'], $cantidadTotalConsumida);
+                        }
+                    }
+                }
+                $this->orderModel->addHistory($id, $_SESSION['user_id'], "Se descontó el stock de materiales correspondiente.");
             }
 
             $this->orderModel->update($id, $nuevoEstado, $_POST['notas'], $motivo_cancelacion);
@@ -255,5 +272,21 @@ class OrderController
             header('Location: /sistemagestion/orders/show/' . $id);
             exit();
         }
+    }
+
+    public function searchProductsAjax()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header('HTTP/1.1 403 Forbidden');
+            exit();
+        }
+
+        $term = $_GET['term'] ?? '';
+        $filters = ['search' => $term];
+        $products = $this->productModel->searchAndFilter($filters);
+
+        header('Content-Type: application/json');
+        echo json_encode($products);
+        exit();
     }
 }

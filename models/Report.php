@@ -61,6 +61,39 @@ class Report
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+    public function getMonthlySales() {
+        $query = "SELECT SUM(costo_total) as total
+                  FROM pedidos
+                  WHERE estado = 'Entregado' AND MONTH(fecha_creacion) = MONTH(CURDATE()) AND YEAR(fecha_creacion) = YEAR(CURDATE())";
+        $result = $this->connection->query($query);
+        $row = $result->fetch_assoc();
+        return (float)($row['total'] ?? 0);
+    }
+
+    public function getMonthlyOrders() {
+        $query = "SELECT COUNT(id) as total
+                  FROM pedidos
+                  WHERE estado != 'Cancelado' AND MONTH(fecha_creacion) = MONTH(CURDATE()) AND YEAR(fecha_creacion) = YEAR(CURDATE())";
+        $result = $this->connection->query($query);
+        $row = $result->fetch_assoc();
+        return (int)($row['total'] ?? 0);
+    }
+
+    public function findRecentImportantPayments($limit, $min_amount = 500) {
+        $query = "SELECT p.monto, p.fecha_pago, c.nombre as nombre_cliente, p.pedido_id
+                  FROM pagos p
+                  JOIN pedidos ped ON p.pedido_id = ped.id
+                  LEFT JOIN clientes c ON ped.cliente_id = c.id
+                  WHERE p.monto >= ?
+                  ORDER BY p.fecha_pago DESC
+                  LIMIT ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("di", $min_amount, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
     public function getProfitOverTime()
     {
         $query = "SELECT

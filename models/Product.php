@@ -143,4 +143,49 @@ class Product
         $result = $this->connection->query($query);
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+
+    public function asociarMaterial($producto_id, $material_id, $cantidad_consumida)
+    {
+        // Primero, verificar si la asociación ya existe para evitar duplicados
+        $checkQuery = "SELECT id FROM producto_materiales WHERE producto_id = ? AND material_id = ?";
+        $stmtCheck = $this->connection->prepare($checkQuery);
+        $stmtCheck->bind_param("ii", $producto_id, $material_id);
+        $stmtCheck->execute();
+        $result = $stmtCheck->get_result();
+
+        if ($result->num_rows > 0) {
+            // Si ya existe, la actualizamos
+            $updateQuery = "UPDATE producto_materiales SET cantidad_consumida = ? WHERE producto_id = ? AND material_id = ?";
+            $stmtUpdate = $this->connection->prepare($updateQuery);
+            $stmtUpdate->bind_param("dii", $cantidad_consumida, $producto_id, $material_id);
+            return $stmtUpdate->execute();
+        }
+
+        $query = "INSERT INTO producto_materiales (producto_id, material_id, cantidad_consumida) VALUES (?, ?, ?)";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("iid", $producto_id, $material_id, $cantidad_consumida);
+        return $stmt->execute();
+    }
+
+    public function getMaterialesAsociados($producto_id)
+    {
+        $query = "SELECT m.id, m.nombre, pm.cantidad_consumida, m.unidad_medida, pm.id as asociacion_id
+                  FROM producto_materiales pm
+                  JOIN materiales m ON pm.material_id = m.id
+                  WHERE pm.producto_id = ?
+                  ORDER BY m.nombre ASC";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("i", $producto_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function desasociarMaterial($asociacion_id)
+    {
+        $query = "DELETE FROM producto_materiales WHERE id = ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("i", $asociacion_id);
+        return $stmt->execute();
+    }
 }

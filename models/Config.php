@@ -35,4 +35,22 @@ class Config {
         $stmt->bind_param("ssd", $tipo, $nombre, $valor); // 'd' para valores decimales como el precio
         return $stmt->execute();
     }
+
+    public function findByKey($tipo, $nombre) {
+        $query = "SELECT valor FROM " . $this->table_name . " WHERE tipo = ? AND nombre = ? LIMIT 1";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("ss", $tipo, $nombre);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['valor'] ?? null;
+    }
+
+    public function updateOrCreate($tipo, $nombre, $valor) {
+        // Aprovecha la clave única (tipo, nombre) para actualizar si existe, o insertar si no.
+        $query = "INSERT INTO " . $this->table_name . " (tipo, nombre, valor) VALUES (?, ?, ?)
+                  ON DUPLICATE KEY UPDATE valor = VALUES(valor)";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("sss", $tipo, $nombre, $valor); // Usamos 's' para valor para más flexibilidad
+        return $stmt->execute();
+    }
 }

@@ -7,8 +7,16 @@
     <title>Sistema de Gestión | Clave 3</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
     <style>
         :root {
+            --bs-primary: #5A4FCF;
+            --bs-primary-rgb: 90, 79, 207;
+            --bs-secondary: #6c757d;
+            --bs-success: #198754;
+            --bs-info: #0dcaf0;
+            --bs-warning: #ffc107;
+            --bs-danger: #dc3545;
             --nav-height: 70px;
         }
 
@@ -144,6 +152,25 @@
         .client-card .list-group-item {
             background-color: transparent !important;
         }
+
+        /* --- Micro-interactions --- */
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .list-group-item-action:hover, .suggestion-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--bs-box-shadow-sm);
+        }
+
+        .list-group-item-action, .suggestion-card {
+            transition: all 0.2s ease-in-out;
+        }
     </style>
 </head>
 
@@ -165,6 +192,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="/sistemagestion/reports">Reportes</a></li>
                                     <li><a class="dropdown-item" href="/sistemagestion/admin/products">Productos</a></li>
+                                    <li><a class="dropdown-item" href="/sistemagestion/admin/materials">Materiales</a></li>
                                     <li><a class="dropdown-item" href="/sistemagestion/admin/settings">Ajustes</a></li>
                                 </ul>
                             </li>

@@ -249,4 +249,13 @@ class Client
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+
+    public function findRecentClients($limit) {
+        $query = "SELECT id, nombre, fecha_creacion FROM " . $this->table_name . " ORDER BY fecha_creacion DESC LIMIT ?";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
 }

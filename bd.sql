@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 04-09-2025 a las 03:30:16
+-- Tiempo de generación: 04-09-2025 a las 16:23:25
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -43,9 +43,9 @@ CREATE TABLE `clientes` (
 INSERT INTO `clientes` (`id`, `nombre`, `telefono`, `email`, `notas`, `fecha_creacion`) VALUES
 (2, 'thiago', '123132', 'thicun0333@gmail.com', 'dada', '2025-08-27 00:46:42'),
 (4, 'idogod', '555555', 'nadie@gmail.com', 'adadd', '2025-08-27 00:46:42'),
-(5, 'daniela', '092651584', 'mamut@gmail.com', 'da', '2025-08-27 00:46:42'),
 (6, '092080061', '092080061', '', 'adsad', '2025-08-27 02:01:29'),
-(7, 'hola', '123123', NULL, '', '2025-09-04 00:43:09');
+(7, 'hola', '123123', NULL, '', '2025-09-04 00:43:09'),
+(8, '123123', '123123', NULL, 'dadsadasdasd', '2025-09-04 03:28:52');
 
 -- --------------------------------------------------------
 
@@ -105,7 +105,14 @@ CREATE TABLE `items_pedido` (
 INSERT INTO `items_pedido` (`id`, `pedido_id`, `producto_id`, `cantidad`, `subtotal`, `doble_faz`) VALUES
 (33, 3470, 1, 12, 63.36, 0),
 (35, 3472, 27, 10, 280.00, 0),
-(36, 3473, 25, 12, 367.20, 0);
+(36, 3473, 25, 12, 367.20, 0),
+(37, 3474, 12, 12, 211.20, 0),
+(38, 3474, 34, 100, 600.00, 0),
+(39, 3475, 21, 12, 192.00, 0),
+(40, 3476, 1, 10, 57.00, 0),
+(41, 3477, 2, 12, 144.00, 0),
+(42, 3478, 8, 12, 288.00, 0),
+(43, 3479, 18, 12, 336.00, 0);
 
 -- --------------------------------------------------------
 
@@ -132,7 +139,7 @@ CREATE TABLE `materiales` (
   `descripcion` text DEFAULT NULL,
   `stock_actual` decimal(10,2) NOT NULL DEFAULT 0.00,
   `stock_minimo` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `unidad` varchar(20) DEFAULT NULL
+  `unidad_medida` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -157,7 +164,12 @@ INSERT INTO `pagos` (`id`, `pedido_id`, `monto`, `metodo_pago`, `fecha_pago`) VA
 (11, 3470, 63.36, 'Débito', '2025-09-04 00:43:25'),
 (13, 3472, 280.00, 'Débito', '2025-09-04 00:59:23'),
 (14, 3473, 123.00, 'Efectivo', '2025-09-04 01:27:18'),
-(15, 3473, 244.20, 'Débito', '2025-09-04 01:27:35');
+(15, 3473, 244.20, 'Débito', '2025-09-04 01:27:35'),
+(16, 3474, 811.20, 'Efectivo', '2025-09-04 01:38:32'),
+(17, 3475, 123.00, 'Efectivo', '2025-09-04 03:13:04'),
+(18, 3475, 69.00, 'Débito', '2025-09-04 03:13:50'),
+(19, 3476, 30.00, 'Efectivo', '2025-09-04 03:31:04'),
+(20, 3476, 27.00, 'Débito', '2025-09-04 03:31:37');
 
 -- --------------------------------------------------------
 
@@ -184,9 +196,15 @@ CREATE TABLE `pedidos` (
 --
 
 INSERT INTO `pedidos` (`id`, `cliente_id`, `usuario_id`, `estado`, `notas_internas`, `motivo_cancelacion`, `es_interno`, `es_error`, `costo_total`, `fecha_creacion`, `ultima_actualizacion`) VALUES
-(3470, 5, 1, 'Entregado', '0', NULL, 0, 0, 63.36, '2025-09-04 00:42:08', '2025-09-04 00:43:25'),
-(3472, 5, 1, 'Entregado', '0', NULL, 0, 0, 280.00, '2025-09-04 00:59:14', '2025-09-04 00:59:23'),
-(3473, 2, 1, 'Entregado', '0', NULL, 0, 0, 367.20, '2025-09-04 01:26:51', '2025-09-04 01:27:35');
+(3470, NULL, 1, 'Entregado', '0', NULL, 0, 0, 63.36, '2025-09-04 00:42:08', '2025-09-04 00:43:25'),
+(3472, NULL, 1, 'Entregado', '0', NULL, 0, 0, 280.00, '2025-09-04 00:59:14', '2025-09-04 00:59:23'),
+(3473, 2, 1, 'Entregado', '0', NULL, 0, 0, 367.20, '2025-09-04 01:26:51', '2025-09-04 01:27:35'),
+(3474, 7, 1, 'Entregado', '0', NULL, 0, 0, 811.20, '2025-09-04 01:38:11', '2025-09-04 01:38:32'),
+(3475, 6, 1, 'Entregado', '0', NULL, 0, 0, 192.00, '2025-09-04 03:11:39', '2025-09-04 03:13:50'),
+(3476, 2, 1, 'Cancelado', '0', 'asd', 0, 0, 57.00, '2025-09-04 03:29:54', '2025-09-04 03:31:49'),
+(3477, 6, 1, 'Solicitud', '0', NULL, 1, 0, 144.00, '2025-09-04 03:33:01', '2025-09-04 03:33:01'),
+(3478, 2, 3, 'Cotización', '0', NULL, 0, 0, 288.00, '2025-09-04 03:37:49', '2025-09-04 03:37:49'),
+(3479, 7, 3, 'Solicitud', '0', NULL, 0, 0, 336.00, '2025-09-04 03:39:21', '2025-09-04 03:39:21');
 
 -- --------------------------------------------------------
 
@@ -231,7 +249,24 @@ INSERT INTO `pedidos_historial` (`id`, `pedido_id`, `usuario_id`, `descripcion`,
 (13, 3473, 1, 'Creó el pedido.', '2025-09-04 01:26:51'),
 (14, 3473, 1, 'Registró un pago de $123.00 (Efectivo).', '2025-09-04 01:27:18'),
 (15, 3473, 1, 'Cambió el estado de \'Solicitud\' a \'Entregado\'.', '2025-09-04 01:27:35'),
-(16, 3473, 1, 'Saldó la cuenta al marcar como \'Entregado\' con Débito.', '2025-09-04 01:27:35');
+(16, 3473, 1, 'Saldó la cuenta al marcar como \'Entregado\' con Débito.', '2025-09-04 01:27:35'),
+(17, 3474, 1, 'Creó el pedido.', '2025-09-04 01:38:11'),
+(18, 3474, 1, 'Cambió el estado de \'Solicitud\' a \'En Curso\'.', '2025-09-04 01:38:20'),
+(19, 3474, 1, 'Cambió el estado de \'En Curso\' a \'Entregado\'.', '2025-09-04 01:38:32'),
+(20, 3474, 1, 'Saldó la cuenta al marcar como \'Entregado\' con Efectivo.', '2025-09-04 01:38:32'),
+(21, 3475, 1, 'Creó el pedido.', '2025-09-04 03:11:39'),
+(22, 3475, 1, 'Cambió el estado de \'Solicitud\' a \'Listo para Retirar\'.', '2025-09-04 03:12:40'),
+(23, 3475, 1, 'Registró un pago de $123.00 (Efectivo).', '2025-09-04 03:13:04'),
+(24, 3475, 1, 'Cambió el estado de \'Listo para Retirar\' a \'Entregado\'.', '2025-09-04 03:13:50'),
+(25, 3475, 1, 'Saldó la cuenta al marcar como \'Entregado\' con Débito.', '2025-09-04 03:13:50'),
+(26, 3476, 1, 'Creó el pedido.', '2025-09-04 03:29:54'),
+(27, 3476, 1, 'Registró un pago de $30.00 (Efectivo).', '2025-09-04 03:31:04'),
+(28, 3476, 1, 'Cambió el estado de \'Solicitud\' a \'Entregado\'.', '2025-09-04 03:31:37'),
+(29, 3476, 1, 'Saldó la cuenta al marcar como \'Entregado\' con Débito.', '2025-09-04 03:31:37'),
+(30, 3476, 1, 'Cambió el estado de \'Entregado\' a \'Cancelado\'. Motivo: asd', '2025-09-04 03:31:49'),
+(31, 3477, 1, 'Creó el pedido.', '2025-09-04 03:33:01'),
+(32, 3478, 3, 'Creó el pedido.', '2025-09-04 03:37:49'),
+(33, 3479, 3, 'Creó el pedido.', '2025-09-04 03:39:21');
 
 -- --------------------------------------------------------
 
@@ -325,7 +360,21 @@ CREATE TABLE `proveedor_pagos` (
 --
 
 INSERT INTO `proveedor_pagos` (`id`, `fecha_pago`, `descripcion`, `monto`) VALUES
-(4, '2025-08-01', 'nashe', 123.00);
+(4, '2025-08-01', 'nashe', 123.00),
+(5, '2025-09-04', 'asd', 123.00);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `producto_materiales`
+--
+
+CREATE TABLE `producto_materiales` (
+  `id` int(11) NOT NULL,
+  `producto_id` int(11) NOT NULL,
+  `material_id` int(11) NOT NULL,
+  `cantidad_consumida` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -348,7 +397,7 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password_hash`, `rol`, `fecha_creacion`) VALUES
 (1, 'Thiago', 'thicun04@gmail.com', '$2y$10$Dz03WFW1hdNS/HEsxl1xpuz3/V7nXET6DTmHAPmlUvMFuH9tvynfa', 'administrador', '2025-08-18 00:38:40'),
-(2, 'NOMBRE DEL EMPLEADO', 'email@empleado.com', '$2y$10$lYfxmeTrMtKSYNCvUtgH3.igui6irJKgBw.Sy4SLlrp9g1/suSonG', 'empleado', '2025-08-27 00:05:32');
+(3, 'Empleado', 'empleado@gmail.com', '$2y$10$vUwFg/0QcPVEoMxi9140.eTb3hTa9MDopyrs1Bim.Ao2cUlnAt/52', 'empleado', '2025-09-04 01:41:43');
 
 --
 -- Índices para tablas volcadas
@@ -440,22 +489,12 @@ ALTER TABLE `proveedor_pagos`
   ADD PRIMARY KEY (`id`);
 
 --
--- Estructura de tabla para la tabla `caja_historial`
+-- Indices de la tabla `producto_materiales`
 --
-
-CREATE TABLE `caja_historial` (
-  `id` int(11) NOT NULL,
-  `fecha` date NOT NULL,
-  `tipo_cuenta` enum('efectivo','banco') NOT NULL,
-  `monto` decimal(10,2) NOT NULL,
-  `notas` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Indices de la tabla `caja_historial`
---
-ALTER TABLE `caja_historial`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `producto_materiales`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `producto_id` (`producto_id`),
+  ADD KEY `material_id` (`material_id`);
 
 --
 -- Indices de la tabla `usuarios`
@@ -472,7 +511,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `descuentos_usados`
@@ -490,7 +529,7 @@ ALTER TABLE `impresora_contadores`
 -- AUTO_INCREMENT de la tabla `items_pedido`
 --
 ALTER TABLE `items_pedido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT de la tabla `items_pedido_materiales`
@@ -508,13 +547,13 @@ ALTER TABLE `materiales`
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3474;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3480;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos_errores`
@@ -526,7 +565,7 @@ ALTER TABLE `pedidos_errores`
 -- AUTO_INCREMENT de la tabla `pedidos_historial`
 --
 ALTER TABLE `pedidos_historial`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
@@ -538,19 +577,19 @@ ALTER TABLE `productos`
 -- AUTO_INCREMENT de la tabla `proveedor_pagos`
 --
 ALTER TABLE `proveedor_pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT de la tabla `caja_historial`
+-- AUTO_INCREMENT de la tabla `producto_materiales`
 --
-ALTER TABLE `caja_historial`
+ALTER TABLE `producto_materiales`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Restricciones para tablas volcadas
@@ -600,6 +639,40 @@ ALTER TABLE `pedidos_errores`
 ALTER TABLE `pedidos_historial`
   ADD CONSTRAINT `pedidos_historial_ibfk_1` FOREIGN KEY (`pedido_id`) REFERENCES `pedidos` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `pedidos_historial_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `producto_materiales`
+--
+ALTER TABLE `producto_materiales`
+  ADD CONSTRAINT `producto_materiales_ibfk_1` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `producto_materiales_ibfk_2` FOREIGN KEY (`material_id`) REFERENCES `materiales` (`id`) ON DELETE CASCADE;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `configuracion`
+--
+
+CREATE TABLE `configuracion` (
+  `id` int(11) NOT NULL,
+  `tipo` varchar(50) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `valor` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Indices de la tabla `configuracion`
+--
+ALTER TABLE `configuracion`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `tipo_nombre` (`tipo`,`nombre`);
+
+--
+-- AUTO_INCREMENT de la tabla `configuracion`
+--
+ALTER TABLE `configuracion`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
